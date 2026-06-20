@@ -38,7 +38,7 @@
             "type": "generic.movement_speed",
             "modifier": {
                 "name": "tiered:mythic_shield_4",
-                "operation": "MULTIPLY_BASE",
+                "operation": "ADD_MULTIPLIED_BASE",
                 "amount": 0.1
             },
             "optional_equipment_slots": [

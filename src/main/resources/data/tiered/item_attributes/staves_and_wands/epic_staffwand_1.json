@@ -23,7 +23,7 @@
             "type": "spell_power:critical_damage",
             "modifier": {
                 "name": "tiered:epic_staffwand_1",
-                "operation": "MULTIPLY_BASE",
+                "operation": "ADD_MULTIPLIED_BASE",
                 "amount": 0.05
             },
             "optional_equipment_slots": [
@@ -35,7 +35,7 @@
             "type": "spell_power:critical_chance",
             "modifier": {
                 "name": "tiered:epic_staffwand_1",
-                "operation": "MULTIPLY_BASE",
+                "operation": "ADD_MULTIPLIED_BASE",
                 "amount": 0.075
             },
             "optional_equipment_slots": [

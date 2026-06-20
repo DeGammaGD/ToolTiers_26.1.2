@@ -3,6 +3,8 @@ package draylar.tiered.api;
 import net.levelz.access.PlayerStatsManagerAccess;
 import net.levelz.stats.Skill;
 import net.libz.util.SortList;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -23,6 +25,15 @@ import elocindev.tierify.compat.ItemBordersCompat;
 
 public class ModifierUtils {
 
+    private static NbtCompound getCustomData(ItemStack stack) {
+        NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
+        return component != null ? component.getNbt() : new NbtCompound();
+    }
+
+    private static void setCustomData(ItemStack stack, NbtCompound compound) {
+        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(compound));
+    }
+
     /**
      * Returns the ID of a random attribute that is valid for the given {@link Item} in {@link Identifier} form.
      * <p>
@@ -39,7 +50,7 @@ public class ModifierUtils {
 
         Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
             if (attribute.isValid(Registries.ITEM.getId(item)) && (attribute.getWeight() > 0 || reforge)) {
-                potentialAttributes.add(new Identifier(attribute.getID()));
+                potentialAttributes.add(Identifier.of(attribute.getID()));
                 attributeWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
             }
         });
@@ -159,29 +170,33 @@ public class ModifierUtils {
 
     public static void setItemStackAttribute(Identifier potentialAttributeID, ItemStack stack) {
         if (potentialAttributeID != null) {
+            NbtCompound root = getCustomData(stack);
 
-            stack.getOrCreateSubNbt(Tierify.NBT_SUBTAG_KEY).putString(Tierify.NBT_SUBTAG_DATA_KEY, potentialAttributeID.toString());
+            NbtCompound tiered = new NbtCompound();
+            tiered.putString(Tierify.NBT_SUBTAG_DATA_KEY, potentialAttributeID.toString());
+            root.put(Tierify.NBT_SUBTAG_KEY, tiered);
 
-            stack.getOrCreateSubNbt("itemborders_colors").putString("top", ItemBordersCompat.getColorForIdentifier(potentialAttributeID));
-            stack.getOrCreateSubNbt("itemborders_colors").putString("bottom", ItemBordersCompat.getColorForIdentifier(potentialAttributeID));
+            NbtCompound colors = new NbtCompound();
+            colors.putString("top", ItemBordersCompat.getColorForIdentifier(potentialAttributeID));
+            colors.putString("bottom", ItemBordersCompat.getColorForIdentifier(potentialAttributeID));
+            root.put("itemborders_colors", colors);
 
-            HashMap<String, Object> nbtMap = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(new Identifier(potentialAttributeID.toString())).getNbtValues();
+            HashMap<String, Object> nbtMap = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(potentialAttributeID.toString())).getNbtValues();
 
             // add durability nbt
-            List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(new Identifier(potentialAttributeID.toString())).getAttributes();
+            List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(potentialAttributeID.toString())).getAttributes();
             for (int i = 0; i < attributeList.size(); i++) {
                 if (attributeList.get(i).getAttributeTypeID().equals("tiered:generic.durable")) {
                     if (nbtMap == null) {
-                        nbtMap = new HashMap<String, Object>();
+                        nbtMap = new HashMap<>();
                     }
-                    nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().getValue() * 100.0) / 100.0);
+                    nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().value() * 100.0) / 100.0);
                     break;
                 }
             }
 
             // add nbtMap
             if (nbtMap != null) {
-                NbtCompound nbtCompound = stack.getNbt();
                 for (HashMap.Entry<String, Object> entry : nbtMap.entrySet()) {
                     String key = entry.getKey();
                     Object value = entry.getValue();
@@ -190,21 +205,20 @@ public class ModifierUtils {
                     // json map will get read as linkedtreemap
                     // json integer is read by gson -> always double
                     if (value instanceof String) {
-                        nbtCompound.putString(key, (String) value);
+                        root.putString(key, (String) value);
                     } else if (value instanceof Boolean) {
-                        nbtCompound.putBoolean(key, (boolean) value);
+                        root.putBoolean(key, (boolean) value);
                     } else if (value instanceof Double) {
-                        if ((double) Math.abs((double) value) % 1.0 < 0.0001D) {
-                            nbtCompound.putInt(key, (int) Math.round((double) value));
+                        if (Math.abs((double) value) % 1.0 < 0.0001D) {
+                            root.putInt(key, (int) Math.round((double) value));
                         } else {
-                            nbtCompound.putDouble(key, Math.round((double) value * 100.0) / 100.0);
+                            root.putDouble(key, Math.round((double) value * 100.0) / 100.0);
                         }
                     }
-
                 }
-
-                stack.setNbt(nbtCompound);
             }
+
+            setCustomData(stack, root);
         }
     }
 
@@ -234,20 +248,22 @@ public class ModifierUtils {
     }
 
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge) {
-        if (stack.getSubNbt(Tierify.NBT_SUBTAG_KEY) == null) {
-            setItemStackAttribute(ModifierUtils.getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge), stack);   
+        NbtCompound customData = getCustomData(stack);
+        if (!customData.contains(Tierify.NBT_SUBTAG_KEY)) {
+            setItemStackAttribute(ModifierUtils.getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge), stack);
         }
     }
 
     public static void removeItemStackAttribute(ItemStack itemStack) {
-        if (itemStack.hasNbt() && itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY) != null) {
-
-            Identifier tier = new Identifier(itemStack.getOrCreateSubNbt(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+        NbtCompound root = getCustomData(itemStack);
+        if (root.contains(Tierify.NBT_SUBTAG_KEY)) {
+            NbtCompound tiered = root.getCompound(Tierify.NBT_SUBTAG_KEY);
+            Identifier tier = Identifier.of(tiered.getString(Tierify.NBT_SUBTAG_DATA_KEY));
             if (Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier) != null) {
                 HashMap<String, Object> nbtMap = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier).getNbtValues();
-                List<String> nbtKeys = new ArrayList<String>();
+                List<String> nbtKeys = new ArrayList<>();
                 if (nbtMap != null) {
-                    nbtKeys.addAll(nbtMap.keySet().stream().toList());
+                    nbtKeys.addAll(nbtMap.keySet());
                 }
 
                 List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier).getAttributes();
@@ -261,19 +277,21 @@ public class ModifierUtils {
                 if (!nbtKeys.isEmpty()) {
                     for (int i = 0; i < nbtKeys.size(); i++) {
                         if (!nbtKeys.get(i).equals("Damage")) {
-                            itemStack.getNbt().remove(nbtKeys.get(i));
+                            root.remove(nbtKeys.get(i));
                         }
                     }
                 }
             }
-            itemStack.removeSubNbt(Tierify.NBT_SUBTAG_KEY);
+            root.remove(Tierify.NBT_SUBTAG_KEY);
+            setCustomData(itemStack, root);
         }
     }
 
     @Nullable
     public static Identifier getAttributeID(ItemStack itemStack) {
-        if (itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY) != null) {
-            return new Identifier(itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+        NbtCompound root = getCustomData(itemStack);
+        if (root.contains(Tierify.NBT_SUBTAG_KEY)) {
+            return Identifier.of(root.getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
         }
         return null;
     }

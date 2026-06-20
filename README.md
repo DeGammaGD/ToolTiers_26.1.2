@@ -54,7 +54,7 @@ Tierify is entirely data-driven, which means you can add, modify, and remove mod
       "type": "generic.dig_speed",
       "modifier": {
         "name": "tiered:hasteful",
-        "operation": "MULTIPLY_BASE",
+        "operation": "ADD_MULTIPLIED_BASE",
         "amount": 0.10
       },
       "optional_equipment_slots": [

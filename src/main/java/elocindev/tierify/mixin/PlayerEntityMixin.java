@@ -4,6 +4,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.Registries;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,10 +25,10 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "createPlayerAttributes", at = @At("RETURN"))
     private static void createPlayerAttributesMixin(CallbackInfoReturnable<DefaultAttributeContainer.Builder> info) {
-        info.getReturnValue().add(CustomEntityAttributes.CRIT_CHANCE);
-        info.getReturnValue().add(CustomEntityAttributes.DIG_SPEED);
-        info.getReturnValue().add(CustomEntityAttributes.DURABLE);
-        info.getReturnValue().add(CustomEntityAttributes.RANGE_ATTACK_DAMAGE);
+        info.getReturnValue().add(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.CRIT_CHANCE));
+        info.getReturnValue().add(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.DIG_SPEED));
+        info.getReturnValue().add(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.DURABLE));
+        info.getReturnValue().add(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.RANGE_ATTACK_DAMAGE));
     }
 
     @ModifyVariable(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/effect/StatusEffectUtil;hasHaste(Lnet/minecraft/entity/LivingEntity;)Z"), index = 2)

@@ -25,7 +25,7 @@
             "type": "generic.movement_speed",
             "modifier": {
                 "name": "tiered:rare_elytra_2",
-                "operation": "MULTIPLY_BASE",
+                "operation": "ADD_MULTIPLIED_BASE",
                 "amount": 0.05
             },
             "optional_equipment_slots": [

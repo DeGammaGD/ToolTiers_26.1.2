@@ -4,15 +4,16 @@ import draylar.tiered.api.CustomEntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.Registries;
 
 public class AttributeHelper {
 
     public static boolean shouldMeeleCrit(PlayerEntity playerEntity) {
-        EntityAttributeInstance instance = playerEntity.getAttributeInstance(CustomEntityAttributes.CRIT_CHANCE);
+        EntityAttributeInstance instance = playerEntity.getAttributeInstance(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.CRIT_CHANCE));
         if (instance != null) {
             float critChance = 0.0f;
             for (EntityAttributeModifier modifier : instance.getModifiers()) {
-                float amount = (float) modifier.getValue();
+                float amount = (float) modifier.value();
                 critChance += amount;
             }
             return playerEntity.getRandom().nextDouble() < critChance;
@@ -21,13 +22,13 @@ public class AttributeHelper {
     }
 
     public static float getExtraDigSpeed(PlayerEntity playerEntity, float oldDigSpeed) {
-        EntityAttributeInstance instance = playerEntity.getAttributeInstance(CustomEntityAttributes.DIG_SPEED);
+        EntityAttributeInstance instance = playerEntity.getAttributeInstance(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.DIG_SPEED));
         if (instance != null) {
             float extraDigSpeed = oldDigSpeed;
             for (EntityAttributeModifier modifier : instance.getModifiers()) {
-                float amount = (float) modifier.getValue();
+                float amount = (float) modifier.value();
 
-                if (modifier.getOperation() == EntityAttributeModifier.Operation.ADDITION) {
+                if (modifier.operation() == EntityAttributeModifier.Operation.ADD_VALUE) {
                     extraDigSpeed += amount;
                 } else {
                     extraDigSpeed *= (amount + 1);
@@ -40,13 +41,13 @@ public class AttributeHelper {
     }
 
     public static float getExtraRangeDamage(PlayerEntity playerEntity, float oldDamage) {
-        EntityAttributeInstance instance = playerEntity.getAttributeInstance(CustomEntityAttributes.RANGE_ATTACK_DAMAGE);
+        EntityAttributeInstance instance = playerEntity.getAttributeInstance(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.RANGE_ATTACK_DAMAGE));
         if (instance != null) {
             float rangeDamage = oldDamage;
             for (EntityAttributeModifier modifier : instance.getModifiers()) {
-                float amount = (float) modifier.getValue();
+                float amount = (float) modifier.value();
 
-                if (modifier.getOperation() == EntityAttributeModifier.Operation.ADDITION) {
+                if (modifier.operation() == EntityAttributeModifier.Operation.ADD_VALUE) {
                     rangeDamage += amount;
                 } else {
                     rangeDamage *= (amount + 1.0f);
@@ -58,11 +59,11 @@ public class AttributeHelper {
     }
 
     public static float getExtraCritDamage(PlayerEntity playerEntity, float oldDamage) {
-        EntityAttributeInstance instance = playerEntity.getAttributeInstance(CustomEntityAttributes.CRIT_CHANCE);
+        EntityAttributeInstance instance = playerEntity.getAttributeInstance(Registries.ATTRIBUTE.getEntry(CustomEntityAttributes.CRIT_CHANCE));
         if (instance != null) {
             float customChance = 0.0f;
             for (EntityAttributeModifier modifier : instance.getModifiers()) {
-                customChance += (float) modifier.getValue();
+                customChance += (float) modifier.value();
             }
             if (playerEntity.getWorld().getRandom().nextFloat() > (1.0f - Math.abs(customChance))) {
                 float extraCrit = oldDamage;

@@ -1,27 +1,32 @@
 package elocindev.tierify.compat;
 
 import elocindev.tierify.Tierify;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class ItemBordersCompat {
     
     public static void addBorder(ItemStack stack, String color) {
-        var nbt = stack.getOrCreateSubNbt("itemborders_colors");
-
+        NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
+        NbtCompound root = component != null ? component.getNbt() : new NbtCompound();
+        NbtCompound nbt = root.contains("itemborders_colors") ? root.getCompound("itemborders_colors") : new NbtCompound();
         nbt.putString("top", color);
-        
-        stack.setSubNbt("itemborders_colors", nbt);
+        root.put("itemborders_colors", nbt);
+        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(root));
     }
 
     public static void addBorder(ItemStack stack, String topColor, String bottomColor) {
-        var nbt = stack.getOrCreateSubNbt("itemborders_colors");
-
+        NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
+        NbtCompound root = component != null ? component.getNbt() : new NbtCompound();
+        NbtCompound nbt = root.contains("itemborders_colors") ? root.getCompound("itemborders_colors") : new NbtCompound();
         nbt.putString("top", topColor);
         nbt.putString("bottom", bottomColor);
-        
-        stack.setSubNbt("itemborders_colors", nbt);
+        root.put("itemborders_colors", nbt);
+        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(root));
     }
 
     /*
@@ -46,6 +51,6 @@ public class ItemBordersCompat {
                 return "0xb53f3f";
         }
 
-        return String.valueOf(Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(new Identifier(identifier.toString())).getStyle().getColor().getRgb());
+        return String.valueOf(Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(identifier.toString())).getStyle().getColor().getRgb());
     }
 }

@@ -24,7 +24,7 @@ public class TooltipBorderLoader implements SimpleSynchronousResourceReloadListe
 
     @Override
     public Identifier getFabricId() {
-        return new Identifier("tiered", "tooltip_loader");
+        return Identifier.of("tiered", "tooltip_loader");
     }
 
     @Override

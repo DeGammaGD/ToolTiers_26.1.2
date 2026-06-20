@@ -90,8 +90,8 @@ public class ReforgeScreenHandler extends ScreenHandler {
                     this.reforgeReady = items.stream().anyMatch(it -> it == baseItem.getItem());
                 } else if (item instanceof ToolItem toolItem) {
                     this.reforgeReady = toolItem.getMaterial().getRepairIngredient().test(baseItem);
-                } else if (item instanceof ArmorItem armorItem && armorItem.getMaterial().getRepairIngredient() != null) {
-                    this.reforgeReady = armorItem.getMaterial().getRepairIngredient().test(baseItem);
+                } else if (item instanceof ArmorItem armorItem) {
+                    this.reforgeReady = armorItem.getMaterial().value().repairIngredient().get().test(baseItem);
                 } else {
                     this.reforgeReady = baseItem.isIn(TieredItemTags.REFORGE_BASE_ITEM);
                 }
@@ -146,7 +146,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
                     if (item instanceof ToolItem toolItem && toolItem.getMaterial().getRepairIngredient().test(itemStack) && !this.insertItem(itemStack2, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }
-                    if (item instanceof ArmorItem armorItem && armorItem.getMaterial().getRepairIngredient() != null && armorItem.getMaterial().getRepairIngredient().test(itemStack)
+                    if (item instanceof ArmorItem armorItem && armorItem.getMaterial().value().repairIngredient().get().test(itemStack)
                             && !this.insertItem(itemStack2, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }
@@ -226,7 +226,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
         String tierName = Text.translatable(tier + ".label").getString().toLowerCase();
         soundId = "reforge_sound_"+tierName;
 
-        return new Identifier("tiered",soundId);
+        return Identifier.of("tiered",soundId);
     }
 
 

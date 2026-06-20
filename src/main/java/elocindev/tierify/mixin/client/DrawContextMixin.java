@@ -22,7 +22,10 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.tooltip.HoveredTooltipPositioner;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
 @Environment(EnvType.CLIENT)
@@ -37,8 +40,9 @@ public class DrawContextMixin {
     @Inject(method = "drawItemTooltip", at = @At("HEAD"), cancellable = true)
     private void drawItemTooltipMixin(TextRenderer textRenderer, ItemStack stack, int x, int y, CallbackInfo info) {
 
-        if (Tierify.CLIENT_CONFIG.tieredTooltip && stack.hasNbt() && stack.getNbt().contains("Tiered")) {
-            String nbtString = stack.getNbt().getCompound("Tiered").asString();
+        NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
+        if (Tierify.CLIENT_CONFIG.tieredTooltip && component != null && component.getNbt().contains("Tiered")) {
+            String nbtString = component.getNbt().getCompound("Tiered").asString();
             for (int i = 0; i < TierifyClient.BORDER_TEMPLATES.size(); i++) {
                 if (!TierifyClient.BORDER_TEMPLATES.get(i).containsStack(stack) && TierifyClient.BORDER_TEMPLATES.get(i).containsDecider(nbtString)) {
                     TierifyClient.BORDER_TEMPLATES.get(i).addStack(stack);

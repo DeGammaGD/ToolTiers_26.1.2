@@ -19,7 +19,7 @@ public class SoundRegistry {
     }
 
     private static SoundEvent register(String name) {
-        Identifier id = new Identifier("tiered", name);
+        Identifier id = Identifier.of("tiered", name);
         return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));
     }
 

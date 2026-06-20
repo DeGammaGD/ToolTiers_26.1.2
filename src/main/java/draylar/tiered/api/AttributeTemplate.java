@@ -65,10 +65,10 @@ public class AttributeTemplate {
      * @param slot
      */
     public void realize(Multimap<EntityAttribute, EntityAttributeModifier> multimap, EquipmentSlot slot) {
-        EntityAttributeModifier cloneModifier = new EntityAttributeModifier(Tierify.MODIFIERS[slot.getArmorStandSlotId()], entityAttributeModifier.getName() + "_" + slot.getName(),
-                entityAttributeModifier.getValue(), entityAttributeModifier.getOperation());
+        Identifier modifierId = Identifier.of(entityAttributeModifier.id().getNamespace(), entityAttributeModifier.id().getPath() + "_" + slot.getName());
+        EntityAttributeModifier cloneModifier = new EntityAttributeModifier(modifierId, entityAttributeModifier.value(), entityAttributeModifier.operation());
 
-        EntityAttribute key = Registries.ATTRIBUTE.get(new Identifier(attributeTypeID));
+        EntityAttribute key = Registries.ATTRIBUTE.get(Identifier.of(attributeTypeID));
         if (key == null) {
             Tierify.LOGGER.warn(String.format("%s was referenced as an attribute type, but it does not exist! A data file in /tiered/item_attributes/ has an invalid type property.", attributeTypeID));
         } else {

@@ -8,11 +8,16 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.item.v1.ModifyItemAttributeModifiersCallback;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.item.tooltip.TooltipType;
+
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Equipment;
@@ -21,7 +26,9 @@ import net.minecraft.item.Items;
 import net.minecraft.item.RangedWeaponItem;
 import net.minecraft.item.ShieldItem;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
@@ -40,7 +47,6 @@ import elocindev.necronomicon.api.config.v1.NecConfigAPI;
 import elocindev.tierify.command.CommandInit;
 import elocindev.tierify.config.ClientConfig;
 import elocindev.tierify.config.CommonConfig;
-import elocindev.tierify.Tierify;
 import elocindev.tierify.data.AttributeDataLoader;
 import elocindev.tierify.data.ReforgeDataLoader;
 import elocindev.tierify.network.TieredServerPacket;
@@ -83,8 +89,56 @@ public class Tierify implements ModInitializer {
 
     public static final Logger LOGGER = LogManager.getLogger();
 
-    public static final Identifier ATTRIBUTE_SYNC_PACKET = new Identifier("attribute_sync");
-    public static final Identifier REFORGE_ITEM_SYNC_PACKET = new Identifier("reforge_item_sync");
+    public static final Identifier ATTRIBUTE_SYNC_PACKET = Identifier.of("attribute_sync");
+    public static final Identifier REFORGE_ITEM_SYNC_PACKET = Identifier.of("reforge_item_sync");
+
+    public static final CustomPayload.Id<AttributeSyncPayload> ATTRIBUTE_SYNC_PAYLOAD_ID = new CustomPayload.Id<>(ATTRIBUTE_SYNC_PACKET);
+    public static final CustomPayload.Id<ReforgeItemSyncPayload> REFORGE_ITEM_SYNC_PAYLOAD_ID = new CustomPayload.Id<>(REFORGE_ITEM_SYNC_PACKET);
+
+    public static final PacketCodec<RegistryByteBuf, AttributeSyncPayload> ATTRIBUTE_SYNC_PAYLOAD_CODEC = CustomPayload.codecOf(
+            (payload, buf) -> {
+                buf.writeInt(payload.attributes().size());
+                payload.attributes().forEach((id, attributeJson) -> {
+                    buf.writeIdentifier(id);
+                    buf.writeString(attributeJson);
+                });
+            },
+            buf -> {
+                Map<Identifier, String> attributes = new HashMap<>();
+                int size = buf.readInt();
+                for (int i = 0; i < size; i++) {
+                    attributes.put(buf.readIdentifier(), buf.readString());
+                }
+                return new AttributeSyncPayload(attributes);
+            }
+    );
+
+    public static final PacketCodec<RegistryByteBuf, ReforgeItemSyncPayload> REFORGE_ITEM_SYNC_PAYLOAD_CODEC = CustomPayload.codecOf(
+            (payload, buf) -> {
+                buf.writeInt(payload.reforgeItems().size());
+                payload.reforgeItems().forEach((targetItem, baseItems) -> {
+                    buf.writeIdentifier(targetItem);
+                    buf.writeInt(baseItems.size());
+                    for (Identifier baseItem : baseItems) {
+                        buf.writeIdentifier(baseItem);
+                    }
+                });
+            },
+            buf -> {
+                Map<Identifier, List<Identifier>> reforgeItems = new HashMap<>();
+                int size = buf.readInt();
+                for (int i = 0; i < size; i++) {
+                    Identifier targetItem = buf.readIdentifier();
+                    int baseItemCount = buf.readInt();
+                    List<Identifier> baseItems = new ArrayList<>();
+                    for (int j = 0; j < baseItemCount; j++) {
+                        baseItems.add(buf.readIdentifier());
+                    }
+                    reforgeItems.put(targetItem, baseItems);
+                }
+                return new ReforgeItemSyncPayload(reforgeItems);
+            }
+    );
     public static final String NBT_SUBTAG_KEY = "Tiered";
     public static final String NBT_SUBTAG_DATA_KEY = "Tier";
     public static final String NBT_SUBTAG_TEMPLATE_DATA_KEY = "Template";
@@ -111,6 +165,9 @@ public class Tierify implements ModInitializer {
         REFORGE_SCREEN_HANDLER_TYPE = Registry.register(Registries.SCREEN_HANDLER, "tiered:reforge",
                 new ScreenHandlerType<>((syncId, inventory) -> new ReforgeScreenHandler(syncId, inventory, ScreenHandlerContext.EMPTY), FeatureFlags.VANILLA_FEATURES));
 
+        PayloadTypeRegistry.playS2C().register(ATTRIBUTE_SYNC_PAYLOAD_ID, ATTRIBUTE_SYNC_PAYLOAD_CODEC);
+        PayloadTypeRegistry.playS2C().register(REFORGE_ITEM_SYNC_PAYLOAD_ID, REFORGE_ITEM_SYNC_PAYLOAD_CODEC);
+
         TieredServerPacket.init();
         
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
@@ -118,7 +175,7 @@ public class Tierify implements ModInitializer {
             // setupModifierLabel();
         }
 
-        ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, new Identifier("ingredients"))).register(content -> {
+        ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of("ingredients"))).register(content -> {
             content.addAfter(Items.RAW_IRON, ItemRegistry.LIMESTONE_CHUNK);
             content.addAfter(Items.ANCIENT_DEBRIS, ItemRegistry.RAW_PYRITE);
             content.addAfter(Items.AMETHYST_SHARD, ItemRegistry.RAW_GALENA);
@@ -135,36 +192,8 @@ public class Tierify implements ModInitializer {
         ServerPlayConnectionEvents.INIT.register((handler, server) -> {
             updateItemStackNbt(handler.player.getInventory());
         });
-        ModifyItemAttributeModifiersCallback.EVENT.register((itemStack, slot, modifiers) -> {
-            if (itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY) != null) {
-                Identifier tier = new Identifier(itemStack.getOrCreateSubNbt(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
-
-                if (!itemStack.hasNbt() || !itemStack.getNbt().contains("AttributeModifiers", 9)) {
-                    PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
-                    if (potentialAttribute != null) {
-                        potentialAttribute.getAttributes().forEach(template -> {
-                            // get required equipment slots
-                            if (template.getRequiredEquipmentSlots() != null) {
-                                List<EquipmentSlot> requiredEquipmentSlots = new ArrayList<>(Arrays.asList(template.getRequiredEquipmentSlots()));
-
-                                if (requiredEquipmentSlots.contains(slot))
-                                    template.realize(modifiers, slot);
-                            }
-
-                            // get optional equipment slots
-                            if (template.getOptionalEquipmentSlots() != null) {
-                                List<EquipmentSlot> optionalEquipmentSlots = new ArrayList<>(Arrays.asList(template.getOptionalEquipmentSlots()));
-
-                                // optional equipment slots are valid ONLY IF the equipment slot is valid for the thing
-                                if (optionalEquipmentSlots.contains(slot) && Tierify.isPreferredEquipmentSlot(itemStack, slot)) {
-                                    template.realize(modifiers, slot);
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-        });
+        
+       
     }
 
     /**
@@ -174,7 +203,7 @@ public class Tierify implements ModInitializer {
      * @return Identifier created with a namespace of this mod's modid ("tiered") and provided path
      */
     public static Identifier id(String path) {
-        return new Identifier("tiered", path);
+        return Identifier.of("tiered", path);
     }
 
     /**
@@ -183,11 +212,12 @@ public class Tierify implements ModInitializer {
      * A tool name is only displayed if the item has a modifier.
      */
     private void setupModifierLabel() {
-        ItemTooltipCallback.EVENT.register((stack, tooltipContext, lines) -> {
+        ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+            NbtComponent customData = stack.get(DataComponentTypes.CUSTOM_DATA);
             // has tier
-            if (stack.getSubNbt(NBT_SUBTAG_KEY) != null) {
+            if (customData != null && customData.getNbt().contains(NBT_SUBTAG_KEY)) {
                 // get tier
-                Identifier tier = new Identifier(stack.getOrCreateSubNbt(NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+                Identifier tier = Identifier.of(customData.getNbt().getCompound(NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
 
                 // attempt to display attribute if it is valid
                 PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
@@ -211,45 +241,33 @@ public class Tierify implements ModInitializer {
 
     public static void registerAttributeSyncer() {
         ServerPlayConnectionEvents.JOIN.register((network, packetSender, minecraftServer) -> {
-            PacketByteBuf packet = new PacketByteBuf(Unpooled.buffer());
-
-            // serialize each attribute file as a string to the packet
-            packet.writeInt(ATTRIBUTE_DATA_LOADER.getItemAttributes().size());
-
-            // write each value
+            Map<Identifier, String> serializedAttributes = new HashMap<>();
             ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
-                packet.writeString(id.toString());
-                packet.writeString(AttributeDataLoader.GSON.toJson(attribute));
+                serializedAttributes.put(id, AttributeDataLoader.GSON.toJson(attribute));
             });
-
-            // send packet with attributes to client
-            packetSender.sendPacket(ATTRIBUTE_SYNC_PACKET, packet);
+            ServerPlayNetworking.send(network.player, new AttributeSyncPayload(serializedAttributes));
         });
     }
 
     public static void registerReforgeItemSyncer() {
         ServerPlayConnectionEvents.JOIN.register((network, packetSender, minecraftServer) -> {
-            PacketByteBuf packet = new PacketByteBuf(Unpooled.buffer());
+            Map<Identifier, List<Identifier>> reforgeItems = new HashMap<>();
             REFORGE_DATA_LOADER.getReforgeIdentifiers().forEach(id -> {
-
-                List<Integer> list = new ArrayList<Integer>();
+                List<Identifier> list = new ArrayList<>();
                 REFORGE_DATA_LOADER.getReforgeBaseItems(Registries.ITEM.get(id)).forEach(item -> {
-                    list.add(Registries.ITEM.getRawId(item));
+                    list.add(Registries.ITEM.getId(item));
                 });
-                packet.writeInt(list.size());
-                packet.writeIdentifier(id);
-                list.forEach(rawId -> {
-                    packet.writeInt(rawId);
-                });
+                reforgeItems.put(id, list);
             });
-            packetSender.sendPacket(REFORGE_ITEM_SYNC_PACKET, packet);
+            ServerPlayNetworking.send(network.player, new ReforgeItemSyncPayload(reforgeItems));
         });
     }
 
     public static void updateItemStackNbt(PlayerInventory playerInventory) {
         for (int u = 0; u < playerInventory.size(); u++) {
             ItemStack itemStack = playerInventory.getStack(u);
-            if (!itemStack.isEmpty() && itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY) != null) {
+            NbtComponent customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
+            if (!itemStack.isEmpty() && customData != null && customData.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
 
                 // Check if attribute exists
                 List<String> attributeIds = new ArrayList<>();
@@ -261,8 +279,8 @@ public class Tierify implements ModInitializer {
                 });
                 Identifier attributeID = null;
                 for (int i = 0; i < attributeIds.size(); i++) {
-                    if (itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY).asString().contains(attributeIds.get(i))) {
-                        attributeID = new Identifier(attributeIds.get(i));
+                    if (customData.getNbt().getCompound(Tierify.NBT_SUBTAG_KEY).asString().contains(attributeIds.get(i))) {
+                        attributeID = Identifier.of(attributeIds.get(i));
                         break;
                     } else if (i == attributeIds.size() - 1) {
                         ModifierUtils.removeItemStackAttribute(itemStack);
@@ -273,23 +291,23 @@ public class Tierify implements ModInitializer {
                 // found an ID
                 if (attributeID != null) {
 
-                    HashMap<String, Object> nbtMap = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(new Identifier(attributeID.toString())).getNbtValues();
+                    HashMap<String, Object> nbtMap = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(attributeID.toString())).getNbtValues();
                     // update durability nbt
 
-                    List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(new Identifier(attributeID.toString())).getAttributes();
+                    List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(attributeID.toString())).getAttributes();
                     for (int i = 0; i < attributeList.size(); i++) {
                         if (attributeList.get(i).getAttributeTypeID().equals("tiered:generic.durable")) {
                             if (nbtMap == null) {
                                 nbtMap = new HashMap<String, Object>();
                             }
-                            nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().getValue() * 100.0) / 100.0);
+                            nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().value() * 100.0) / 100.0);
                             break;
                         }
                     }
 
                     // add nbtMap
                     if (nbtMap != null) {
-                        NbtCompound nbtCompound = itemStack.getNbt();
+                        NbtCompound nbtCompound = customData.copyNbt();
                         for (HashMap.Entry<String, Object> entry : nbtMap.entrySet()) {
                             String key = entry.getKey();
                             Object value = entry.getValue();
@@ -309,14 +327,33 @@ public class Tierify implements ModInitializer {
                                 }
                             }
                         }
-                        itemStack.setNbt(nbtCompound);
+                        itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbtCompound));
+                        customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
                     }
-                    if (itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY) == null) {
-                        itemStack.getOrCreateSubNbt(Tierify.NBT_SUBTAG_KEY).putString(Tierify.NBT_SUBTAG_DATA_KEY, attributeID.toString());
+                    if (customData == null || !customData.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
+                        NbtCompound root = customData != null ? customData.copyNbt() : new NbtCompound();
+                        NbtCompound tiered = new NbtCompound();
+                        tiered.putString(Tierify.NBT_SUBTAG_DATA_KEY, attributeID.toString());
+                        root.put(Tierify.NBT_SUBTAG_KEY, tiered);
+                        itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(root));
                     }
                     playerInventory.setStack(u, itemStack);
                 }
             }
+        }
+    }
+
+    public record AttributeSyncPayload(Map<Identifier, String> attributes) implements CustomPayload {
+        @Override
+        public CustomPayload.Id<AttributeSyncPayload> getId() {
+            return ATTRIBUTE_SYNC_PAYLOAD_ID;
+        }
+    }
+
+    public record ReforgeItemSyncPayload(Map<Identifier, List<Identifier>> reforgeItems) implements CustomPayload {
+        @Override
+        public CustomPayload.Id<ReforgeItemSyncPayload> getId() {
+            return REFORGE_ITEM_SYNC_PAYLOAD_ID;
         }
     }
 }

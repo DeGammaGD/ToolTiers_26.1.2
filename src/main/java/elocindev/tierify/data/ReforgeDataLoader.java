@@ -28,7 +28,7 @@ public class ReforgeDataLoader implements SimpleSynchronousResourceReloadListene
 
     @Override
     public Identifier getFabricId() {
-        return new Identifier("tiered", "reforge_loader");
+        return Identifier.of("tiered", "reforge_loader");
     }
 
     @Override
@@ -42,18 +42,18 @@ public class ReforgeDataLoader implements SimpleSynchronousResourceReloadListene
                 for (int u = 0; u < data.getAsJsonArray("items").size(); u++) {
                     List<Item> baseItems = new ArrayList<Item>();
                     for (int i = 0; i < data.getAsJsonArray("base").size(); i++) {
-                        if (Registries.ITEM.get(new Identifier(data.getAsJsonArray("base").get(i).getAsString())).toString().equals("air")) {
+                        if (Registries.ITEM.get(Identifier.of(data.getAsJsonArray("base").get(i).getAsString())).toString().equals("air")) {
                             LOGGER.info("Resource {} was not loaded cause {} is not a valid item identifier", id.toString(), data.getAsJsonArray("base").get(i).getAsString());
                             continue;
                         }
-                        baseItems.add(Registries.ITEM.get(new Identifier(data.getAsJsonArray("base").get(i).getAsString())));
+                        baseItems.add(Registries.ITEM.get(Identifier.of(data.getAsJsonArray("base").get(i).getAsString())));
                     }
-                    if (Registries.ITEM.get(new Identifier(data.getAsJsonArray("items").get(u).getAsString())).toString().equals("air")) {
+                    if (Registries.ITEM.get(Identifier.of(data.getAsJsonArray("items").get(u).getAsString())).toString().equals("air")) {
                         LOGGER.info("Resource {} was not loaded cause {} is not a valid item identifier", id.toString(), data.getAsJsonArray("items").get(u).getAsString());
                         continue;
                     }
-                    reforgeIdentifiers.add(new Identifier(data.getAsJsonArray("items").get(u).getAsString()));
-                    reforgeBaseMap.put(new Identifier(data.getAsJsonArray("items").get(u).getAsString()), baseItems);
+                    reforgeIdentifiers.add(Identifier.of(data.getAsJsonArray("items").get(u).getAsString()));
+                    reforgeBaseMap.put(Identifier.of(data.getAsJsonArray("items").get(u).getAsString()), baseItems);
                 }
             } catch (Exception e) {
                 LOGGER.error("Error occurred while loading resource {}. {}", id.toString(), e.toString());

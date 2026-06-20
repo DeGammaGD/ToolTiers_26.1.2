@@ -17,6 +17,7 @@ import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ArmorMaterial;
 import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.Item;
+import net.minecraft.util.Identifier;
 
 @Mixin(ArmorItem.class)
 public class ArmorItemMixin {
@@ -24,9 +25,9 @@ public class ArmorItemMixin {
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMultimap$Builder;put(Ljava/lang/Object;Ljava/lang/Object;)Lcom/google/common/collect/ImmutableMultimap$Builder;", ordinal = 1), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void initMixin(ArmorMaterial material, ArmorItem.Type type, Item.Settings settings, CallbackInfo info, ImmutableMultimap.Builder<EntityAttribute, EntityAttributeModifier> builder,
             UUID uUID) {
-        if (material != ArmorMaterials.NETHERITE && material.getKnockbackResistance() > 0.0001f) {
-            builder.put(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE,
-                    new EntityAttributeModifier(uUID, "Armor knockback resistance", (double) material.getKnockbackResistance(), EntityAttributeModifier.Operation.ADDITION));
+        if (material != ArmorMaterials.NETHERITE.value() && material.knockbackResistance() > 0.0001f) {
+                builder.put(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE.value(),
+                    new EntityAttributeModifier(Identifier.of("tiered", "armor_knockback_resistance"), material.knockbackResistance(), EntityAttributeModifier.Operation.ADD_VALUE));
         }
     }
 }

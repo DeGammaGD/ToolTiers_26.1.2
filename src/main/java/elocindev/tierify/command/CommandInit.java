@@ -11,6 +11,8 @@ import draylar.tiered.api.ModifierUtils;
 import elocindev.tierify.Tierify;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
@@ -60,22 +62,23 @@ public class CommandInit {
             }
 
             if (tier == -1) {
-                if (itemStack.getSubNbt(Tierify.NBT_SUBTAG_KEY) != null) {
+                NbtComponent customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
+                if (customData != null && customData.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
                     ModifierUtils.removeItemStackAttribute(itemStack);
 
-                    source.sendFeedback(() -> Text.translatable("commands.tiered.untier", itemStack.getItem().getName(itemStack).getString(), serverPlayerEntity.getDisplayName()), true);
+                    source.sendFeedback(() -> Text.translatable("commands.tiered.untier", itemStack.getName().getString(), serverPlayerEntity.getDisplayName()), true);
                 } else {
-                    source.sendFeedback(() -> Text.translatable("commands.tiered.untier_failed", itemStack.getItem().getName(itemStack).getString(), serverPlayerEntity.getDisplayName()), true);
+                    source.sendFeedback(() -> Text.translatable("commands.tiered.untier_failed", itemStack.getName().getString(), serverPlayerEntity.getDisplayName()), true);
                 }
             } else {
                 ArrayList<Identifier> potentialAttributes = new ArrayList<Identifier>();
                 Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
                     if (attribute.isValid(Registries.ITEM.getId(itemStack.getItem()))) {
-                        potentialAttributes.add(new Identifier(attribute.getID()));
+                        potentialAttributes.add(Identifier.of(attribute.getID()));
                     }
                 });
                 if (potentialAttributes.size() <= 0) {
-                    source.sendFeedback(() -> Text.translatable("commands.tiered.tiering_failed", itemStack.getItem().getName(itemStack).getString(), serverPlayerEntity.getDisplayName()), true);
+                    source.sendFeedback(() -> Text.translatable("commands.tiered.tiering_failed", itemStack.getName().getString(), serverPlayerEntity.getDisplayName()), true);
                     continue;
                 } else {
 
@@ -90,7 +93,7 @@ public class CommandInit {
                     }
 
                     if (potentialTier.size() <= 0) {
-                        source.sendFeedback(() -> Text.translatable("commands.tiered.tiering_failed", itemStack.getItem().getName(itemStack).getString(), serverPlayerEntity.getDisplayName()), true);
+                        source.sendFeedback(() -> Text.translatable("commands.tiered.tiering_failed", itemStack.getName().getString(), serverPlayerEntity.getDisplayName()), true);
                         continue;
                     } else {
 
@@ -98,22 +101,27 @@ public class CommandInit {
 
                         Identifier attribute = potentialTier.get(serverPlayerEntity.getWorld().getRandom().nextInt(potentialTier.size()));
                         if (attribute != null) {
-                            itemStack.getOrCreateSubNbt(Tierify.NBT_SUBTAG_KEY).putString(Tierify.NBT_SUBTAG_DATA_KEY, attribute.toString());
+                            NbtComponent customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
+                            NbtCompound root = customData != null ? customData.getNbt() : new NbtCompound();
+                            root.put(Tierify.NBT_SUBTAG_KEY, new NbtCompound());
+                            root.getCompound(Tierify.NBT_SUBTAG_KEY).putString(Tierify.NBT_SUBTAG_DATA_KEY, attribute.toString());
+                            itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(root));
 
-                            HashMap<String, Object> nbtMap = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(new Identifier(attribute.toString())).getNbtValues();
+                            HashMap<String, Object> nbtMap = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(attribute.toString())).getNbtValues();
 
                             // add durability nbt
-                            List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(new Identifier(attribute.toString())).getAttributes();
+                            List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(attribute.toString())).getAttributes();
                             for (int i = 0; i < attributeList.size(); i++)
                                 if (attributeList.get(i).getAttributeTypeID().equals("tiered:generic.durable")) {
                                     if (nbtMap == null)
                                         nbtMap = new HashMap<String, Object>();
-                                    nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().getValue() * 100.0) / 100.0);
+                                    nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().value() * 100.0) / 100.0);
                                     break;
                                 }
                             // add nbtMap
                             if (nbtMap != null) {
-                                NbtCompound nbtCompound = itemStack.getNbt();
+                                NbtComponent data = itemStack.get(DataComponentTypes.CUSTOM_DATA);
+                                NbtCompound nbtCompound = data != null ? data.getNbt() : new NbtCompound();
                                 for (HashMap.Entry<String, Object> entry : nbtMap.entrySet()) {
                                     String key = entry.getKey();
                                     Object value = entry.getValue();
@@ -132,9 +140,9 @@ public class CommandInit {
                                             nbtCompound.putDouble(key, Math.round((double) value * 100.0) / 100.0);
                                     }
                                 }
-                                itemStack.setNbt(nbtCompound);
+                                itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbtCompound));
                             }
-                            source.sendFeedback(() -> Text.translatable("commands.tiered.tier", itemStack.getItem().getName(itemStack).getString(), serverPlayerEntity.getDisplayName()), true);
+                            source.sendFeedback(() -> Text.translatable("commands.tiered.tier", itemStack.getName().getString(), serverPlayerEntity.getDisplayName()), true);
                         }
                     }
                 }

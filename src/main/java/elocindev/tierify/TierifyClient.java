@@ -14,6 +14,7 @@ import net.minecraft.resource.ResourceType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +38,8 @@ public class TierifyClient implements ClientModInitializer {
 
     public static final List<BorderTemplate> BORDER_TEMPLATES = new ArrayList<BorderTemplate>();
 
-    private static final Identifier ANVIL_TAB_ICON = new Identifier("tiered:textures/gui/anvil_tab_icon.png");
-    private static final Identifier REFORGE_TAB_ICON = new Identifier("tiered:textures/gui/reforge_tab_icon.png");
+    private static final Identifier ANVIL_TAB_ICON = Identifier.of("tiered:textures/gui/anvil_tab_icon.png");
+    private static final Identifier REFORGE_TAB_ICON = Identifier.of("tiered:textures/gui/reforge_tab_icon.png");
     
     @Override
     public void onInitializeClient() {
@@ -52,43 +53,27 @@ public class TierifyClient implements ClientModInitializer {
     }
 
     public static void registerAttributeSyncHandler() {
-        ClientPlayNetworking.registerGlobalReceiver(Tierify.ATTRIBUTE_SYNC_PACKET, (client, play, packet, packetSender) -> {
-            // save old attributes
-            CACHED_ATTRIBUTES.putAll(Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes());
-            Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().clear();
-
-            // for each id/attribute pair, load it
-            int size = packet.readInt();
-            for (int i = 0; i < size; i++) {
-                Identifier id = new Identifier(packet.readString());
-                PotentialAttribute pa = AttributeDataLoader.GSON.fromJson(packet.readString(), PotentialAttribute.class);
-                Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().put(id, pa);
-            }
+        ClientPlayNetworking.registerGlobalReceiver(Tierify.ATTRIBUTE_SYNC_PAYLOAD_ID, (payload, context) -> {
+            context.client().execute(() -> {
+                CACHED_ATTRIBUTES.clear();
+                payload.attributes().forEach((id, attributeJson) -> {
+                    CACHED_ATTRIBUTES.put(id, AttributeDataLoader.GSON.fromJson(attributeJson, PotentialAttribute.class));
+                });
+            });
         });
     }
 
     public static void registerReforgeItemSyncHandler() {
-        ClientPlayNetworking.registerGlobalReceiver(Tierify.REFORGE_ITEM_SYNC_PACKET, (client, play, packet, packetSender) -> {
-            List<Identifier> identifiers = new ArrayList<Identifier>();
-            List<List<Integer>> list = new ArrayList<List<Integer>>();
-            while (packet.isReadable()) {
-                int count = packet.readInt();
-                identifiers.add(packet.readIdentifier());
-                List<Integer> idList = new ArrayList<Integer>();
-                for (int i = 0; i < count; i++) {
-                    idList.add(packet.readInt());
-                }
-                list.add(idList);
-            }
-            client.execute(() -> {
+        ClientPlayNetworking.registerGlobalReceiver(Tierify.REFORGE_ITEM_SYNC_PAYLOAD_ID, (payload, context) -> {
+            context.client().execute(() -> {
                 Tierify.REFORGE_DATA_LOADER.clearReforgeBaseItems();
-                for (int i = 0; i < identifiers.size(); i++) {
-                    List<Item> items = new ArrayList<Item>();
-                    for (int u = 0; u < list.get(i).size(); u++) {
-                        items.add(Registries.ITEM.get(list.get(i).get(u)));
+                payload.reforgeItems().forEach((targetItem, baseItemIds) -> {
+                    List<Item> items = new ArrayList<>();
+                    for (Identifier id : baseItemIds) {
+                        items.add(Registries.ITEM.get(id));
                     }
-                    Tierify.REFORGE_DATA_LOADER.putReforgeBaseItems(identifiers.get(i), items);
-                }
+                    Tierify.REFORGE_DATA_LOADER.putReforgeBaseItems(targetItem, items);
+                });
             });
         });
     }

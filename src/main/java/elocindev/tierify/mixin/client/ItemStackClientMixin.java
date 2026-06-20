@@ -9,14 +9,16 @@ import elocindev.tierify.Tierify;
 import elocindev.tierify.util.TieredTooltip;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.item.TooltipContext;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -46,13 +48,10 @@ import java.util.Map;
 public abstract class ItemStackClientMixin {
 
     @Shadow
-    public abstract NbtCompound getOrCreateSubNbt(String key);
+    public abstract <T> T get(net.minecraft.component.ComponentType<? extends T> type);
 
     @Shadow
-    public abstract boolean hasNbt();
-
-    @Shadow
-    public abstract NbtCompound getSubNbt(String key);
+    public abstract void applyAttributeModifiers(EquipmentSlot slot, java.util.function.BiConsumer<net.minecraft.registry.entry.RegistryEntry<EntityAttribute>, EntityAttributeModifier> attributeConsumer);
 
     @Shadow
     @Final
@@ -66,20 +65,20 @@ public abstract class ItemStackClientMixin {
     private boolean toughnessZero = false;
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 6), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void storeTooltipInformation(PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List> info, List list, MutableText mutableText, int i, EquipmentSlot var6[], int var7,
+    private void storeTooltipInformation(PlayerEntity player, Item.TooltipContext context, TooltipType type, CallbackInfoReturnable<List<Text>> info, List<Text> list, MutableText mutableText, int i, EquipmentSlot[] var6, int var7,
             int var8, EquipmentSlot equipmentSlot, Multimap<EntityAttribute, EntityAttributeModifier> multimap) {
         for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : multimap.entries()) {
             String translationKey = entry.getKey().getTranslationKey();
-            if (entry.getValue().getName().contains("tiered:") && !map.containsKey(translationKey) && multimap.get(entry.getKey()).size() > 1) {
+            if (entry.getValue().id().toString().contains("tiered:") && !map.containsKey(translationKey) && multimap.get(entry.getKey()).size() > 1) {
                 
-                double value = entry.getValue().getValue();
+            double value = entry.getValue().value();
                 String format = MODIFIER_FORMAT.format(
-                        entry.getValue().getOperation() == EntityAttributeModifier.Operation.MULTIPLY_BASE || entry.getValue().getOperation() == EntityAttributeModifier.Operation.MULTIPLY_TOTAL
+                entry.getValue().operation() == EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE || entry.getValue().operation() == EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                                 ? value * 100.0
                                 : (entry.getKey().equals(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE) ? value * 10.0 : value));
 
                 ArrayList collect = new ArrayList<>();
-                collect.add(entry.getValue().getOperation().getId()); // Operation Id
+            collect.add(entry.getValue().operation().getId()); // Operation Id
                 collect.add(format); // Value formated
                 collect.add(value > 0.0D); // Value greater 0
 
@@ -127,13 +126,13 @@ public abstract class ItemStackClientMixin {
     }
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/EntityAttributeModifier;getOperation()Lnet/minecraft/entity/attribute/EntityAttributeModifier$Operation;", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void storeAttributeModifier(PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List> cir, List list, MutableText mutableText, int i, EquipmentSlot var6[], int var7,
-            int var8, EquipmentSlot equipmentSlot, Multimap multimap, Iterator var11, Map.Entry<EntityAttribute, EntityAttributeModifier> entry, EntityAttributeModifier entityAttributeModifier,
+    private void storeAttributeModifier(PlayerEntity player, Item.TooltipContext context, TooltipType type, CallbackInfoReturnable<List<Text>> cir, List<Text> list, MutableText mutableText, int i, EquipmentSlot[] var6, int var7,
+            int var8, EquipmentSlot equipmentSlot, Multimap<EntityAttribute, EntityAttributeModifier> multimap, Iterator<Map.Entry<EntityAttribute, EntityAttributeModifier>> var11, Map.Entry<EntityAttribute, EntityAttributeModifier> entry, EntityAttributeModifier entityAttributeModifier,
             double d) {
-        this.isTiered = entityAttributeModifier.getName().contains("tiered:");
+            this.isTiered = entityAttributeModifier.id().toString().contains("tiered:");
         this.translationKey = entry.getKey().getTranslationKey();
         this.armorModifierFormat = MODIFIER_FORMAT.format(
-                entityAttributeModifier.getOperation() == EntityAttributeModifier.Operation.MULTIPLY_BASE || entityAttributeModifier.getOperation() == EntityAttributeModifier.Operation.MULTIPLY_TOTAL
+                entityAttributeModifier.operation() == EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE || entityAttributeModifier.operation() == EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                         ? d * 100.0
                         : (entry.getKey().equals(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE) ? d * 10.0 : d));
 
@@ -153,7 +152,7 @@ public abstract class ItemStackClientMixin {
                     }
                 }
             } else {
-                this.toughnessZero = entityAttributeModifier.getValue() < 0.0001D;
+                this.toughnessZero = entityAttributeModifier.value() < 0.0001D;
             }
         }
 
@@ -161,8 +160,9 @@ public abstract class ItemStackClientMixin {
 
     @Redirect(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/MutableText;formatted(Lnet/minecraft/util/Formatting;)Lnet/minecraft/text/MutableText;", ordinal = 2))
     private MutableText getFormatting(MutableText text, Formatting formatting) {
-        if (this.hasNbt() && this.getSubNbt(Tierify.NBT_SUBTAG_KEY) != null && isTiered) {
-            Identifier tier = new Identifier(this.getOrCreateSubNbt(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+        NbtComponent component = this.get(DataComponentTypes.CUSTOM_DATA);
+        if (component != null && component.getNbt().contains(Tierify.NBT_SUBTAG_KEY) && isTiered) {
+            Identifier tier = Identifier.of(component.getNbt().getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
             PotentialAttribute attribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
             return text.setStyle(attribute.getStyle());
         } else {
@@ -176,7 +176,7 @@ public abstract class ItemStackClientMixin {
         Multimap<EntityAttribute, EntityAttributeModifier> remaining = LinkedListMultimap.create();
 
         map.forEach((entityAttribute, entityAttributeModifier) -> {
-            if (!entityAttributeModifier.getName().contains("tiered")) {
+            if (!entityAttributeModifier.id().toString().contains("tiered")) {
                 vanillaFirst.put(entityAttribute, entityAttributeModifier);
             } else {
                 remaining.put(entityAttribute, entityAttributeModifier);
@@ -189,8 +189,9 @@ public abstract class ItemStackClientMixin {
 
     @Inject(method = "getName", at = @At("RETURN"), cancellable = true)
     private void getNameMixin(CallbackInfoReturnable<Text> info) {
-        if (this.hasNbt() && this.getSubNbt("display") == null && this.getSubNbt(Tierify.NBT_SUBTAG_KEY) != null) {
-            Identifier tier = new Identifier(getOrCreateSubNbt(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+        NbtComponent component = this.get(DataComponentTypes.CUSTOM_DATA);
+        if (component != null && !component.getNbt().contains("display") && component.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
+            Identifier tier = Identifier.of(component.getNbt().getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
 
             // attempt to display attribute if it is valid
             PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
@@ -208,10 +209,10 @@ public abstract class ItemStackClientMixin {
     }
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/item/ItemStack;getAttributeModifiers(Lnet/minecraft/entity/EquipmentSlot;)Lcom/google/common/collect/Multimap;"), locals = LocalCapture.CAPTURE_FAILSOFT)
-    private void getTooltipMixin(PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> info, List list, MutableText mutableText, int i, EquipmentSlot var6[], int var7,
-            int var8, EquipmentSlot equipmentSlot, Multimap multimap) {
-        if (this.isTiered && !multimap.isEmpty() && equipmentSlot == EquipmentSlot.OFFHAND && this.getAttributeModifiers(EquipmentSlot.MAINHAND) != null
-                && !this.getAttributeModifiers(EquipmentSlot.MAINHAND).isEmpty()) {
+ private void getTooltipMixin(PlayerEntity player, Item.TooltipContext context, TooltipType type, CallbackInfoReturnable<List<Text>> info, List<Text> list, MutableText mutableText, int i, EquipmentSlot[] var6, int var7,
+            int var8, EquipmentSlot equipmentSlot, Multimap<EntityAttribute, EntityAttributeModifier> multimap) {
+        Multimap<EntityAttribute, EntityAttributeModifier> mainHandModifiers = getAttributeModifiersCompat(EquipmentSlot.MAINHAND);
+        if (this.isTiered && !multimap.isEmpty() && equipmentSlot == EquipmentSlot.OFFHAND && !mainHandModifiers.isEmpty()) {
             try {
                 multimap.clear();
             } catch (UnsupportedOperationException exception) {
@@ -221,15 +222,17 @@ public abstract class ItemStackClientMixin {
 
     @ModifyExpressionValue(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/Text;translatable(Ljava/lang/String;)Lnet/minecraft/text/MutableText;", ordinal = 1))
     private MutableText modifyTooltipEquipmentSlot(MutableText original) {
-        if (this.isTiered && this.getAttributeModifiers(EquipmentSlot.MAINHAND) != null && !this.getAttributeModifiers(EquipmentSlot.MAINHAND).isEmpty()
-                && this.getAttributeModifiers(EquipmentSlot.OFFHAND) != null && !this.getAttributeModifiers(EquipmentSlot.OFFHAND).isEmpty()) {
+        Multimap<EntityAttribute, EntityAttributeModifier> mainHandModifiers = getAttributeModifiersCompat(EquipmentSlot.MAINHAND);
+        Multimap<EntityAttribute, EntityAttributeModifier> offHandModifiers = getAttributeModifiersCompat(EquipmentSlot.OFFHAND);
+        if (this.isTiered && !mainHandModifiers.isEmpty() && !offHandModifiers.isEmpty()) {
             return Text.translatable("item.modifiers.hand").formatted(Formatting.GRAY);
         }
         return original;
     }
 
-    @Shadow
-    public Multimap<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(EquipmentSlot slot) {
-        return null;
+    private Multimap<EntityAttribute, EntityAttributeModifier> getAttributeModifiersCompat(EquipmentSlot slot) {
+        Multimap<EntityAttribute, EntityAttributeModifier> modifiers = LinkedListMultimap.create();
+        this.applyAttributeModifiers(slot, (attribute, modifier) -> modifiers.put(attribute.value(), modifier));
+        return modifiers;
     }
 }

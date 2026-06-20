@@ -20,6 +20,6 @@ public class TieredItemTags {
     }
 
     private static TagKey<Item> register(String id) {
-        return TagKey.of(RegistryKeys.ITEM, new Identifier("tiered", id));
+        return TagKey.of(RegistryKeys.ITEM, Identifier.of("tiered", id));
     }
 }

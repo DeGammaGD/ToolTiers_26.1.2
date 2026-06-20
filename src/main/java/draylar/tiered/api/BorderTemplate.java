@@ -20,7 +20,7 @@ public class BorderTemplate {
     public BorderTemplate(int index, String texture, int startGradient, int endGradient, int backgroundGradient, List<String> decider) {
         this.index = index;
         this.texture = texture;
-        this.identifier = new Identifier("tiered", "textures/gui/" + this.texture + ".png");
+        this.identifier = Identifier.of("tiered", "textures/gui/" + this.texture + ".png");
         this.startGradient = startGradient;
         this.endGradient = endGradient;
         this.backgroundGradient = backgroundGradient;

@@ -23,7 +23,7 @@
             "type": "tiered:generic.dig_speed",
             "modifier": {
                 "name": "tiered:epic_tool_4",
-                "operation": "MULTIPLY_BASE",
+                "operation": "ADD_MULTIPLIED_BASE",
                 "amount": 0.1
             },
             "optional_equipment_slots": [

@@ -31,7 +31,7 @@ import net.minecraft.util.Identifier;
 @Environment(EnvType.CLIENT)
 public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implements ScreenHandlerListener, Tab {
 
-    public static final Identifier TEXTURE = new Identifier("tiered", "textures/gui/reforging_screen.png");
+    public static final Identifier TEXTURE = Identifier.of("tiered", "textures/gui/reforging_screen.png");
     public ReforgeScreen.ReforgeButton reforgeButton;
     private ItemStack last;
     private List<Item> baseItems;
@@ -62,7 +62,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
         super.render(context, mouseX, mouseY, delta);
         RenderSystem.disableBlend();
 
@@ -84,9 +84,12 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                         for (int i = 0; i < toolItem.getMaterial().getRepairIngredient().getMatchingStacks().length; i++) {
                             baseItems.add(toolItem.getMaterial().getRepairIngredient().getMatchingStacks()[i].getItem());
                         }
-                    } else if (itemStack.getItem() instanceof ArmorItem armorItem && armorItem.getMaterial().getRepairIngredient() != null) {
-                        for (int i = 0; i < armorItem.getMaterial().getRepairIngredient().getMatchingStacks().length; i++) {
-                            baseItems.add(armorItem.getMaterial().getRepairIngredient().getMatchingStacks()[i].getItem());
+                    } else if (itemStack.getItem() instanceof ArmorItem armorItem) {
+                        var repairIngredient = armorItem.getMaterial().value().repairIngredient().get();
+                        if (repairIngredient != null) {
+                            for (int i = 0; i < repairIngredient.getMatchingStacks().length; i++) {
+                                baseItems.add(repairIngredient.getMatchingStacks()[i].getItem());
+                            }
                         }
                     } else {
                         for (RegistryEntry<Item> itemRegistryEntry : Registries.ITEM.getOrCreateEntryList(TieredItemTags.REFORGE_BASE_ITEM)) {
@@ -148,7 +151,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         }
 
         @Override
-        public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+        protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
