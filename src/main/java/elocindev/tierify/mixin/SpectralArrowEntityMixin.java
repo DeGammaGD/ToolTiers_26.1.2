@@ -6,26 +6,26 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import elocindev.tierify.util.AttributeHelper;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.SpectralArrowEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.SpectralArrow;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
-@Mixin(SpectralArrowEntity.class)
-public abstract class SpectralArrowEntityMixin extends PersistentProjectileEntity {
+@Mixin(SpectralArrow.class)
+public abstract class SpectralArrowEntityMixin extends AbstractArrow {
 
-    public SpectralArrowEntityMixin(EntityType<? extends PersistentProjectileEntity> entityType, World world) {
+    public SpectralArrowEntityMixin(EntityType<? extends AbstractArrow> entityType, Level world) {
         super(entityType, world);
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;)V", at = @At("TAIL"))
-    private void initMixin(World world, LivingEntity owner, ItemStack stack, ItemStack shotFrom, CallbackInfo info) {
-        if (this.getOwner() instanceof ServerPlayerEntity) {
-            this.setDamage(AttributeHelper.getExtraRangeDamage((PlayerEntity) this.getOwner(), (float) this.getDamage()));
+    @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)V", at = @At("TAIL"))
+    private void initMixin(Level world, LivingEntity owner, ItemStack stack, ItemStack shotFrom, CallbackInfo info) {
+        if (this.getOwner() instanceof ServerPlayer) {
+            this.setBaseDamage(AttributeHelper.getExtraRangeDamage((Player) this.getOwner(), (float) this.getBaseDamage()));
         }
     }
 }

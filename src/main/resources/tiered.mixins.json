@@ -12,8 +12,7 @@
   "client": [
     "client.ItemStackClientMixin",
     "client.AnvilScreenMixin",
-    "client.DrawContextMixin",
-    "client.HandledScreenMixin"
+    "client.DrawContextMixin"
   ],
   "injectors": {
     "defaultRequire": 1

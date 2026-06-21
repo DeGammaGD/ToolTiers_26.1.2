@@ -7,22 +7,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import draylar.tiered.api.ModifierUtils;
 import elocindev.tierify.Tierify;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextParameterSet;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 @Mixin(LootTable.class)
 public class LootTableMixin {
 
-    @Inject(method = "supplyInventory", at = @At("TAIL"))
-    private void supplyInventoryMixin(Inventory inventory, LootContextParameterSet parameters, long seed, CallbackInfo info) {
-        if (parameters.getWorld().isClient() || !Tierify.CONFIG.lootContainerModifier) {
+    @Inject(method = "fill", at = @At("TAIL"))
+    private void supplyInventoryMixin(Container inventory, LootParams parameters, long seed, CallbackInfo info) {
+        if (parameters.getLevel().isClientSide() || !Tierify.CONFIG.lootContainerModifier) {
             return;
         }
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack itemStack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack itemStack = inventory.getItem(i);
             if (itemStack.isEmpty()) {
                 continue;
             }

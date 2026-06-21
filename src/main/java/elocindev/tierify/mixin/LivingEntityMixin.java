@@ -1,17 +1,5 @@
 package elocindev.tierify.mixin;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -22,6 +10,17 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import elocindev.tierify.network.TieredServerPacket;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
@@ -29,23 +28,23 @@ public abstract class LivingEntityMixin extends Entity {
     @Mutable
     @Shadow
     @Final
-    private static TrackedData<Float> HEALTH;
+    private static EntityDataAccessor<Float> DATA_HEALTH_ID;
 
-    public LivingEntityMixin(EntityType<?> type, World world) {
+    public LivingEntityMixin(EntityType<?> type, Level world) {
         super(type, world);
     }
 
     /**
      * Item attributes aren't applied until the player first ticks, which means any attributes such as bonus health are reset. This is annoying with health boosting armor.
      */
-    @Redirect(method = "readCustomDataFromNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setHealth(F)V"))
+    @Redirect(method = "readAdditionalSaveData", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setHealth(F)V"))
     private void readCustomDataFromNbtMixin(LivingEntity livingEntity, float health) {
-        this.dataTracker.set(HEALTH, health);
+        this.entityData.set(DATA_HEALTH_ID, health);
     }
 
-    @Inject(method = "onEquipStack", at = @At("TAIL"))
+    @Inject(method = { "onEquipItem", "onEquipStack" }, at = @At("TAIL"), require = 0)
     private void onEquipStackMixin(EquipmentSlot slot, ItemStack oldStack, ItemStack newStack, CallbackInfo info) {
-        if (!((Object) this instanceof ServerPlayerEntity serverPlayerEntity)) {
+        if (!((Object) this instanceof ServerPlayer serverPlayerEntity)) {
             return;
         }
 
@@ -53,15 +52,15 @@ public abstract class LivingEntityMixin extends Entity {
             return;
         }
 
-        boolean syncHealth = newStack.isEmpty() || !oldStack.isOf(newStack.getItem());
+        boolean syncHealth = newStack.isEmpty() || !oldStack.is(newStack.getItem());
         if (!syncHealth) {
-            NbtComponent oldComponent = oldStack.get(DataComponentTypes.CUSTOM_DATA);
-            NbtCompound oldNbt = oldComponent != null ? oldComponent.copyNbt() : new NbtCompound();
+            CustomData oldComponent = oldStack.get(DataComponents.CUSTOM_DATA);
+            CompoundTag oldNbt = oldComponent != null ? oldComponent.copyTag() : new CompoundTag();
             oldNbt.remove("Damage");
             oldNbt.remove("iced");
 
-            NbtComponent newComponent = newStack.get(DataComponentTypes.CUSTOM_DATA);
-            NbtCompound newNbt = newComponent != null ? newComponent.copyNbt() : new NbtCompound();
+            CustomData newComponent = newStack.get(DataComponents.CUSTOM_DATA);
+            CompoundTag newNbt = newComponent != null ? newComponent.copyTag() : new CompoundTag();
             newNbt.remove("Damage");
             newNbt.remove("iced");
             syncHealth = !oldNbt.equals(newNbt);
@@ -79,7 +78,7 @@ public abstract class LivingEntityMixin extends Entity {
         }
 
         final boolean[] hasTieredModifier = new boolean[] { false };
-        stack.applyAttributeModifiers(slot, (attribute, modifier) -> {
+        stack.forEachModifier(slot, (attribute, modifier) -> {
             if (modifier.id().toString().contains("tiered:")) {
                 hasTieredModifier[0] = true;
             }
@@ -100,8 +99,5 @@ public abstract class LivingEntityMixin extends Entity {
     @Shadow
     public void setHealth(float health) {
     }
-
-    @Shadow
-    public abstract ItemStack getEquippedStack(EquipmentSlot var1);
 
 }
