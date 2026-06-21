@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import elocindev.tierify.network.TieredServerPacket;
 
-@SuppressWarnings("rawtypes")
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
 

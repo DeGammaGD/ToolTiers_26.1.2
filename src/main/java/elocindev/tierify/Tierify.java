@@ -7,6 +7,7 @@ import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -19,6 +20,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Equipment;
 import net.minecraft.item.ItemStack;
@@ -39,6 +42,7 @@ import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Box;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -201,6 +205,18 @@ public class Tierify implements ModInitializer {
         ServerPlayConnectionEvents.INIT.register((handler, server) -> {
             updateItemStackNbt(handler.player.getInventory());
         });
+
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (!CONFIG.entityItemModifier || !(entity instanceof MobEntity)) {
+                return;
+            }
+
+            Box searchBox = entity.getBoundingBox().expand(1.5D);
+            for (ItemEntity itemEntity : entity.getWorld().getEntitiesByClass(ItemEntity.class, searchBox, dropped -> !dropped.getStack().isEmpty())) {
+                ModifierUtils.applyTierToItem(itemEntity.getStack());
+                ModifierUtils.logTierDebug("mob_drops", itemEntity.getStack());
+            }
+        });
         
        
     }
@@ -223,10 +239,11 @@ public class Tierify implements ModInitializer {
     private void setupModifierLabel() {
         ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
             NbtComponent customData = stack.get(DataComponentTypes.CUSTOM_DATA);
+            NbtCompound root = customData != null ? customData.copyNbt() : new NbtCompound();
             // has tier
-            if (customData != null && customData.getNbt().contains(NBT_SUBTAG_KEY)) {
+            if (customData != null && root.contains(NBT_SUBTAG_KEY)) {
                 // get tier
-                Identifier tier = Identifier.of(customData.getNbt().getCompound(NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+                Identifier tier = Identifier.of(root.getCompound(NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
 
                 // attempt to display attribute if it is valid
                 PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
@@ -276,7 +293,8 @@ public class Tierify implements ModInitializer {
         for (int u = 0; u < playerInventory.size(); u++) {
             ItemStack itemStack = playerInventory.getStack(u);
             NbtComponent customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
-            if (!itemStack.isEmpty() && customData != null && customData.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
+            NbtCompound root = customData != null ? customData.copyNbt() : new NbtCompound();
+            if (!itemStack.isEmpty() && customData != null && root.contains(Tierify.NBT_SUBTAG_KEY)) {
 
                 // Check if attribute exists
                 List<String> attributeIds = new ArrayList<>();
@@ -288,7 +306,7 @@ public class Tierify implements ModInitializer {
                 });
                 Identifier attributeID = null;
                 for (int i = 0; i < attributeIds.size(); i++) {
-                    if (customData.getNbt().getCompound(Tierify.NBT_SUBTAG_KEY).asString().contains(attributeIds.get(i))) {
+                    if (root.getCompound(Tierify.NBT_SUBTAG_KEY).asString().contains(attributeIds.get(i))) {
                         attributeID = Identifier.of(attributeIds.get(i));
                         break;
                     } else if (i == attributeIds.size() - 1) {
@@ -338,13 +356,14 @@ public class Tierify implements ModInitializer {
                         }
                         itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbtCompound));
                         customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
+                        root = customData != null ? customData.copyNbt() : new NbtCompound();
                     }
-                    if (customData == null || !customData.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
-                        NbtCompound root = customData != null ? customData.copyNbt() : new NbtCompound();
+                    if (customData == null || !root.contains(Tierify.NBT_SUBTAG_KEY)) {
+                        NbtCompound updatedRoot = customData != null ? customData.copyNbt() : new NbtCompound();
                         NbtCompound tiered = new NbtCompound();
                         tiered.putString(Tierify.NBT_SUBTAG_DATA_KEY, attributeID.toString());
-                        root.put(Tierify.NBT_SUBTAG_KEY, tiered);
-                        itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(root));
+                        updatedRoot.put(Tierify.NBT_SUBTAG_KEY, tiered);
+                        itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(updatedRoot));
                     }
                     playerInventory.setStack(u, itemStack);
                 }

@@ -26,9 +26,6 @@
     ],
     "client": [
       "elocindev.tierify.TierifyClient"
-    ],
-    "modmenu": [
-      "elocindev.tierify.config.ModMenuIntegration"
     ]
   },
   "mixins": [

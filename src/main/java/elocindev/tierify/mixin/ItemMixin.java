@@ -24,14 +24,15 @@ public class ItemMixin {
     private void onCraftMixin(ItemStack stack, World world, CallbackInfo info) {
         Tierify.LOGGER.info("ItemStack created via onCraft for {}", net.minecraft.registry.Registries.ITEM.getId(stack.getItem()));
         if (!world.isClient() && !stack.isEmpty() && Tierify.CONFIG.craftingModifier) {
-            ModifierUtils.setItemStackAttribute(null, stack, false);
+            ModifierUtils.applyTierToItem(stack);
+            ModifierUtils.logTierDebug("crafting", stack);
         }
     }
 
     @Inject(method = "getItemBarStep", at = @At("HEAD"), cancellable = true)
     private void getItemBarStepMixin(ItemStack stack, CallbackInfoReturnable<Integer> info) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        if (component != null && component.getNbt().contains("durable")) {
+        if (component != null && component.copyNbt().contains("durable")) {
             info.setReturnValue(Math.round(13.0f - (float) stack.getDamage() * 13.0f / (float) stack.getMaxDamage()));
         }
     }
@@ -39,7 +40,7 @@ public class ItemMixin {
     @Inject(method = "getItemBarColor", at = @At("HEAD"), cancellable = true)
     private void getItemBarColorMixin(ItemStack stack, CallbackInfoReturnable<Integer> info) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        if (component != null && component.getNbt().contains("durable")) {
+        if (component != null && component.copyNbt().contains("durable")) {
             float f = Math.max(0.0f, ((float) stack.getMaxDamage() - (float) stack.getDamage()) / (float) stack.getMaxDamage());
             info.setReturnValue(MathHelper.hsvToRgb(f / 3.0f, 1.0f, 1.0f));
         }

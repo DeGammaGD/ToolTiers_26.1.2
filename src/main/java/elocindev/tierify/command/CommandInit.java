@@ -63,7 +63,7 @@ public class CommandInit {
 
             if (tier == -1) {
                 NbtComponent customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
-                if (customData != null && customData.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
+                if (customData != null && customData.copyNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
                     ModifierUtils.removeItemStackAttribute(itemStack);
 
                     source.sendFeedback(() -> Text.translatable("commands.tiered.untier", itemStack.getName().getString(), serverPlayerEntity.getDisplayName()), true);
@@ -102,7 +102,7 @@ public class CommandInit {
                         Identifier attribute = potentialTier.get(serverPlayerEntity.getWorld().getRandom().nextInt(potentialTier.size()));
                         if (attribute != null) {
                             NbtComponent customData = itemStack.get(DataComponentTypes.CUSTOM_DATA);
-                            NbtCompound root = customData != null ? customData.getNbt() : new NbtCompound();
+                            NbtCompound root = customData != null ? customData.copyNbt() : new NbtCompound();
                             root.put(Tierify.NBT_SUBTAG_KEY, new NbtCompound());
                             root.getCompound(Tierify.NBT_SUBTAG_KEY).putString(Tierify.NBT_SUBTAG_DATA_KEY, attribute.toString());
                             itemStack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(root));
@@ -121,7 +121,7 @@ public class CommandInit {
                             // add nbtMap
                             if (nbtMap != null) {
                                 NbtComponent data = itemStack.get(DataComponentTypes.CUSTOM_DATA);
-                                NbtCompound nbtCompound = data != null ? data.getNbt() : new NbtCompound();
+                                NbtCompound nbtCompound = data != null ? data.copyNbt() : new NbtCompound();
                                 for (HashMap.Entry<String, Object> entry : nbtMap.entrySet()) {
                                     String key = entry.getKey();
                                     Object value = entry.getValue();

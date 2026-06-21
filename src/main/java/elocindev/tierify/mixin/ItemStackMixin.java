@@ -23,7 +23,7 @@ public abstract class ItemStackMixin {
         ItemStack stack = (ItemStack) (Object) this;
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
         if (component != null) {
-            NbtCompound root = component.getNbt();
+            NbtCompound root = component.copyNbt();
             if (root.contains("durable")) {
                 info.setReturnValue(info.getReturnValue() + (root.getInt("durable") > 0 ? root.getInt("durable") : (int) (root.getFloat("durable") * info.getReturnValue())));
             }
@@ -35,7 +35,8 @@ public abstract class ItemStackMixin {
         ItemStack stack = (ItemStack) (Object) this;
         Tierify.LOGGER.info("ItemStack created via onCraftByPlayer for {} x{}", net.minecraft.registry.Registries.ITEM.getId(stack.getItem()), amount);
         if (!world.isClient() && !stack.isEmpty() && Tierify.CONFIG.craftingModifier) {
-            ModifierUtils.setItemStackAttribute(player, stack, false);
+            ModifierUtils.applyTierToItem(stack);
+            ModifierUtils.logTierDebug("crafting", stack);
         }
     }
 }

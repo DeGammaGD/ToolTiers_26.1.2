@@ -22,6 +22,7 @@ import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
 @Environment(EnvType.CLIENT)
@@ -35,9 +36,10 @@ public abstract class HandledScreenMixin extends Screen {
     @Inject(method = "drawMouseoverTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTooltip(Lnet/minecraft/client/font/TextRenderer;Ljava/util/List;Ljava/util/Optional;II)V"), cancellable = true, locals = LocalCapture.CAPTURE_FAILSOFT)
     protected void drawMouseoverTooltipMixin(DrawContext context, int x, int y, CallbackInfo info, ItemStack stack) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        if (Tierify.CLIENT_CONFIG.tieredTooltip && component != null && component.getNbt().contains("Tiered")) {
+        NbtCompound root = component != null ? component.copyNbt() : new NbtCompound();
+        if (Tierify.CLIENT_CONFIG.tieredTooltip && component != null && root.contains("Tiered")) {
 
-            String nbtString = component.getNbt().getCompound("Tiered").asString();
+            String nbtString = root.getCompound("Tiered").asString();
             for (int i = 0; i < TierifyClient.BORDER_TEMPLATES.size(); i++) {
                 if (!TierifyClient.BORDER_TEMPLATES.get(i).containsStack(stack) && TierifyClient.BORDER_TEMPLATES.get(i).containsDecider(nbtString)) {
                     TierifyClient.BORDER_TEMPLATES.get(i).addStack(stack);

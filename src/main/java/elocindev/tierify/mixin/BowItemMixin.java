@@ -9,10 +9,8 @@ import elocindev.tierify.util.AttributeHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.item.ArrowItem;
 import net.minecraft.item.BowItem;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.world.World;
 
 @Mixin(BowItem.class)
 public class BowItemMixin {

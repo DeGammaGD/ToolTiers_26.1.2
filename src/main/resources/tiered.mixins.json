@@ -5,11 +5,15 @@
   "mixins": [
     "ItemStackMixin",
     "ItemMixin",
-    "AnvilScreenHandlerMixin"
+    "AnvilScreenHandlerMixin",
+    "LootTableMixin",
+    "MobEntityMixin"
   ],
   "client": [
     "client.ItemStackClientMixin",
-    "client.AnvilScreenMixin"
+    "client.AnvilScreenMixin",
+    "client.DrawContextMixin",
+    "client.HandledScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

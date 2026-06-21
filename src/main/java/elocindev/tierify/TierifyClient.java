@@ -4,12 +4,11 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.libz.registry.TabRegistry;
-import net.minecraft.client.gui.screen.ingame.AnvilScreen;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
-import net.minecraft.text.Text;
+import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 
 
@@ -21,10 +20,10 @@ import java.util.Map;
 import draylar.tiered.api.BorderTemplate;
 import draylar.tiered.api.PotentialAttribute;
 import elocindev.tierify.data.AttributeDataLoader;
+import elocindev.tierify.data.TooltipBorderLoader;
 import elocindev.tierify.network.TieredClientPacket;
 import elocindev.tierify.screen.ReforgeScreenHandler;
 import elocindev.tierify.screen.client.ReforgeScreen;
-import elocindev.tierify.screen.client.widget.ReforgeTab;
 
 @Environment(EnvType.CLIENT)
 public class TierifyClient implements ClientModInitializer {
@@ -33,8 +32,6 @@ public class TierifyClient implements ClientModInitializer {
     public static final Map<Identifier, PotentialAttribute> CACHED_ATTRIBUTES = new HashMap<>();
 
     public static final List<BorderTemplate> BORDER_TEMPLATES = new ArrayList<BorderTemplate>();
-
-    private static final Identifier REFORGE_TAB_ICON = Identifier.of("tiered:textures/gui/reforge_tab_icon.png");
     
     @Override
     public void onInitializeClient() {
@@ -42,8 +39,7 @@ public class TierifyClient implements ClientModInitializer {
         registerReforgeItemSyncHandler();
         HandledScreens.<ReforgeScreenHandler, ReforgeScreen>register(Tierify.REFORGE_SCREEN_HANDLER_TYPE, ReforgeScreen::new);
         TieredClientPacket.init();
-        // TODO(1.21.1-stabilization): Restore optional tooltip border addon once core tooltip text flow is stable.
-        // ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new TooltipBorderLoader());
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new TooltipBorderLoader());
 
         // TODO(1.21.1-stabilization): Restore custom Anvil tab navigation after reforge flow is fully validated.
         // TabRegistry.registerOtherTab(new AnvilTab(Text.translatable("container.repair"), ANVIL_TAB_ICON, 0, AnvilScreen.class), AnvilScreen.class);

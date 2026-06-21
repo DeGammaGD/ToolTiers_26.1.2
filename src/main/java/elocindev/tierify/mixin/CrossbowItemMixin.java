@@ -11,7 +11,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.CrossbowItem;
-import net.minecraft.item.ItemStack;
 
 @Mixin(CrossbowItem.class)
 public class CrossbowItemMixin {

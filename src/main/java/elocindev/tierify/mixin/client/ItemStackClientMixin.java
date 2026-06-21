@@ -12,6 +12,7 @@ import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -30,8 +31,9 @@ public abstract class ItemStackClientMixin {
     @Inject(method = "getName", at = @At("RETURN"), cancellable = true)
     private void getNameMixin(CallbackInfoReturnable<Text> info) {
         NbtComponent component = ((ItemStack) (Object) this).get(DataComponentTypes.CUSTOM_DATA);
-        if (component != null && !component.getNbt().contains("display") && component.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
-            Identifier tier = Identifier.of(component.getNbt().getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+        NbtCompound root = component != null ? component.copyNbt() : new NbtCompound();
+        if (component != null && !root.contains("display") && root.contains(Tierify.NBT_SUBTAG_KEY)) {
+            Identifier tier = Identifier.of(root.getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
             PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
 
             if (potentialAttribute != null) {
@@ -53,9 +55,10 @@ public abstract class ItemStackClientMixin {
     private void getTooltipMixin(Item.TooltipContext context, PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> info) {
         List<Text> tooltip = info.getReturnValue();
         NbtComponent component = ((ItemStack) (Object) this).get(DataComponentTypes.CUSTOM_DATA);
+        NbtCompound root = component != null ? component.copyNbt() : new NbtCompound();
 
-        if (component != null && component.getNbt().contains(Tierify.NBT_SUBTAG_KEY)) {
-            Identifier tier = Identifier.of(component.getNbt().getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
+        if (component != null && root.contains(Tierify.NBT_SUBTAG_KEY)) {
+            Identifier tier = Identifier.of(root.getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
             PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
 
             if (potentialAttribute != null) {

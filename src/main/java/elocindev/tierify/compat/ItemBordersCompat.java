@@ -12,7 +12,7 @@ public class ItemBordersCompat {
     
     public static void addBorder(ItemStack stack, String color) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        NbtCompound root = component != null ? component.getNbt() : new NbtCompound();
+        NbtCompound root = component != null ? component.copyNbt() : new NbtCompound();
         NbtCompound nbt = root.contains("itemborders_colors") ? root.getCompound("itemborders_colors") : new NbtCompound();
         nbt.putString("top", color);
         root.put("itemborders_colors", nbt);
@@ -21,7 +21,7 @@ public class ItemBordersCompat {
 
     public static void addBorder(ItemStack stack, String topColor, String bottomColor) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        NbtCompound root = component != null ? component.getNbt() : new NbtCompound();
+        NbtCompound root = component != null ? component.copyNbt() : new NbtCompound();
         NbtCompound nbt = root.contains("itemborders_colors") ? root.getCompound("itemborders_colors") : new NbtCompound();
         nbt.putString("top", topColor);
         nbt.putString("bottom", bottomColor);

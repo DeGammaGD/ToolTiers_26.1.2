@@ -33,7 +33,7 @@ public class ModifierUtils {
 
     private static NbtCompound getCustomData(ItemStack stack) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        NbtCompound result = component != null ? component.getNbt() : new NbtCompound();
+        NbtCompound result = component != null ? component.copyNbt() : new NbtCompound();
         if (component != null && result.contains(Tierify.NBT_SUBTAG_KEY)) {
             Tierify.LOGGER.info("Tier read from {} -> {}", Registries.ITEM.getId(stack.getItem()), result.getCompound(Tierify.NBT_SUBTAG_KEY).getString(Tierify.NBT_SUBTAG_DATA_KEY));
         }
@@ -51,16 +51,28 @@ public class ModifierUtils {
 
     public static boolean hasTier(ItemStack stack) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        boolean hasTier = component != null && component.getNbt().contains(Tierify.NBT_SUBTAG_KEY);
+        boolean hasTier = component != null && component.copyNbt().contains(Tierify.NBT_SUBTAG_KEY);
         Tierify.LOGGER.info("Tier presence check for {} -> {}", Registries.ITEM.getId(stack.getItem()), hasTier);
         return hasTier;
     }
 
     public static boolean hasTierMarker(ItemStack stack) {
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-        boolean hasMarker = component != null && component.getNbt().contains(Tierify.NBT_SUBTAG_MARKER_KEY) && component.getNbt().getBoolean(Tierify.NBT_SUBTAG_MARKER_KEY);
+        boolean hasMarker = component != null && component.copyNbt().contains(Tierify.NBT_SUBTAG_MARKER_KEY) && component.copyNbt().getBoolean(Tierify.NBT_SUBTAG_MARKER_KEY);
         Tierify.LOGGER.info("Tier marker check for {} -> {}", Registries.ITEM.getId(stack.getItem()), hasMarker);
         return hasMarker;
+    }
+
+    public static void applyTierToItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        setItemStackAttribute(null, stack, false);
+    }
+
+    public static void logTierDebug(String source, ItemStack stack) {
+        Identifier assignedTier = getAttributeID(stack);
+        Tierify.LOGGER.info("[TIER DEBUG] source: {} item: {} assigned tier: {}", source, Registries.ITEM.getId(stack.getItem()), assignedTier);
     }
 
     /**
