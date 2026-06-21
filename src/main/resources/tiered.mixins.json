@@ -4,27 +4,12 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "ItemStackMixin",
-    "LivingEntityMixin",
-    "PlayerEntityMixin",
     "ItemMixin",
-    "ArrowEntityMixin",
-    "CrossbowItemMixin",
-    "BowItemMixin",
-    "SpectralArrowEntityMixin",
-    "TridentEntityMixin",
-    "LootTableMixin",
-    "AnvilScreenHandlerMixin",
-    "MerchantScreenHandlerMixin",
-    "ItemFrameEntityMixin",
-    "MobEntityMixin",
-    "ArmorStandEntityMixin",
-    "ArmorItemMixin"
+    "AnvilScreenHandlerMixin"
   ],
   "client": [
     "client.ItemStackClientMixin",
-    "client.AnvilScreenMixin",
-    "client.DrawContextMixin",
-    "client.HandledScreenMixin"
+    "client.AnvilScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

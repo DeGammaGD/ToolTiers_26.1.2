@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +35,9 @@ public abstract class ItemStackClientMixin {
             PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
 
             if (potentialAttribute != null) {
+                Tierify.LOGGER.info("Tooltip name read tier {} for {}", tier, Registries.ITEM.getId(((ItemStack) (Object) this).getItem()));
+                Tierify.LOGGER.info("Tooltip name attributes for {} -> {}", tier, potentialAttribute.getAttributes());
+                Tierify.LOGGER.info("[TierifyDebug][Tooltip] item={} tier={} attributes={}", Registries.ITEM.getId(((ItemStack) (Object) this).getItem()), tier, potentialAttribute.getAttributes());
                 MutableText text = Text.translatable(potentialAttribute.getID() + ".label");
 
                 if (Tierify.CLIENT_CONFIG.showPlatesOnName) {
@@ -55,6 +59,9 @@ public abstract class ItemStackClientMixin {
             PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
 
             if (potentialAttribute != null) {
+                Tierify.LOGGER.info("Tooltip body read tier {} for {}", tier, Registries.ITEM.getId(((ItemStack) (Object) this).getItem()));
+                Tierify.LOGGER.info("Tooltip body attributes for {} -> {}", tier, potentialAttribute.getAttributes());
+                Tierify.LOGGER.info("[TierifyDebug][Tooltip] item={} tier={} attributes={}", Registries.ITEM.getId(((ItemStack) (Object) this).getItem()), tier, potentialAttribute.getAttributes());
                 tooltip.add(Text.literal("Tier: ").append(Text.translatable(potentialAttribute.getID() + ".label").setStyle(potentialAttribute.getStyle())));
             }
         }

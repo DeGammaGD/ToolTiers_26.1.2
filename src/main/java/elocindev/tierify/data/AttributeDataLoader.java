@@ -44,16 +44,31 @@ public class AttributeDataLoader extends JsonDataLoader implements SimpleSynchro
                     JsonObject object = json.getAsJsonObject();
                     Style style = Style.EMPTY;
                     if (object.has("color")) {
-                        String color = object.get("color").getAsString();
-                        if (color.startsWith("#")) {
-                            var parsed = TextColor.parse(color).result();
-                            if (parsed.isPresent()) {
-                                style = style.withColor(parsed.get());
+                        JsonElement colorElement = object.get("color");
+                        String color = null;
+                        if (colorElement.isJsonPrimitive()) {
+                            color = colorElement.getAsString();
+                        } else if (colorElement.isJsonObject()) {
+                            JsonObject colorObject = colorElement.getAsJsonObject();
+                            if (colorObject.has("string")) {
+                                color = colorObject.get("string").getAsString();
+                            } else if (colorObject.has("name")) {
+                                color = colorObject.get("name").getAsString();
+                            } else if (colorObject.has("rgb")) {
+                                style = style.withColor(TextColor.fromRgb(colorObject.get("rgb").getAsInt()));
                             }
-                        } else {
-                            Formatting formatting = Formatting.byName(color.toUpperCase(Locale.ROOT));
-                            if (formatting != null) {
-                                style = style.withColor(TextColor.fromFormatting(formatting));
+                        }
+                        if (color != null) {
+                            if (color.startsWith("#")) {
+                                var parsed = TextColor.parse(color).result();
+                                if (parsed.isPresent()) {
+                                    style = style.withColor(parsed.get());
+                                }
+                            } else {
+                                Formatting formatting = Formatting.byName(color.toUpperCase(Locale.ROOT));
+                                if (formatting != null) {
+                                    style = style.withColor(TextColor.fromFormatting(formatting));
+                                }
                             }
                         }
                     }
@@ -79,6 +94,7 @@ public class AttributeDataLoader extends JsonDataLoader implements SimpleSynchro
 
     @Override
     protected void apply(Map<Identifier, JsonElement> loader, ResourceManager manager, Profiler profiler) {
+        LOGGER.info("Loading {} attribute definitions", loader.size());
         Map<Identifier, PotentialAttribute> readItemAttributes = Maps.newHashMap();
 
         for (Map.Entry<Identifier, JsonElement> entry : loader.entrySet()) {
@@ -93,7 +109,7 @@ public class AttributeDataLoader extends JsonDataLoader implements SimpleSynchro
         }
 
         itemAttributes = readItemAttributes;
-        LOGGER.info(LOADED_RECIPES_MESSAGE, readItemAttributes.size());
+        LOGGER.info("Loaded {} attribute definitions", readItemAttributes.size());
     }
 
     public Map<Identifier, PotentialAttribute> getItemAttributes() {

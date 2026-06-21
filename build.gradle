@@ -42,8 +42,6 @@ dependencies {
 		modImplementation include ('maven.modrinth:libz:1.0.3+1.21.1') {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
-	// Extras
-	include(modImplementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0")))
 }
 
 processResources {

@@ -8,6 +8,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 
 /**
@@ -64,15 +65,15 @@ public class AttributeTemplate {
      * @param multimap map to add {@link AttributeTemplate}
      * @param slot
      */
-    public void realize(Multimap<EntityAttribute, EntityAttributeModifier> multimap, EquipmentSlot slot) {
+    public void realize(Multimap<RegistryEntry<EntityAttribute>, EntityAttributeModifier> multimap, EquipmentSlot slot) {
         Identifier modifierId = Identifier.of(entityAttributeModifier.id().getNamespace(), entityAttributeModifier.id().getPath() + "_" + slot.getName());
         EntityAttributeModifier cloneModifier = new EntityAttributeModifier(modifierId, entityAttributeModifier.value(), entityAttributeModifier.operation());
 
-        EntityAttribute key = Registries.ATTRIBUTE.get(Identifier.of(attributeTypeID));
-        if (key == null) {
+        var key = Registries.ATTRIBUTE.getEntry(Identifier.of(attributeTypeID));
+        if (key.isEmpty()) {
             Tierify.LOGGER.warn(String.format("%s was referenced as an attribute type, but it does not exist! A data file in /tiered/item_attributes/ has an invalid type property.", attributeTypeID));
         } else {
-            multimap.put(key, cloneModifier);
+            multimap.put(key.get(), cloneModifier);
         }
     }
 }

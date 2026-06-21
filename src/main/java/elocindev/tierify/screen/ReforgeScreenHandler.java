@@ -86,6 +86,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
                 List<Item> items = Tierify.REFORGE_DATA_LOADER.getReforgeBaseItems(item);
                 ItemStack baseItem = this.getSlot(0).getStack();
+                Tierify.LOGGER.info("[TierifyDebug][Reforge] input={} available_reforges={}", Registries.ITEM.getId(item), items.stream().map(it -> Registries.ITEM.getId(it).toString()).toList());
                 if (!items.isEmpty()) {
                     this.reforgeReady = items.stream().anyMatch(it -> it == baseItem.getItem());
                 } else if (item instanceof ToolItem toolItem) {
@@ -95,6 +96,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
                 } else {
                     this.reforgeReady = baseItem.isIn(TieredItemTags.REFORGE_BASE_ITEM);
                 }
+                Tierify.LOGGER.info("Reforge check for {} with base {} -> {}", Registries.ITEM.getId(item), Registries.ITEM.getId(baseItem.getItem()), this.reforgeReady);
             } else {
                 this.reforgeReady = false;
             }
@@ -177,8 +179,15 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
     public void reforge() {
         ItemStack itemStack = this.getSlot(1).getStack();
+        Identifier beforeTier = ModifierUtils.getAttributeID(itemStack);
+        Tierify.LOGGER.info("Applying reforge to {} using {}", Registries.ITEM.getId(itemStack.getItem()), Registries.ITEM.getId(this.getSlot(2).getStack().getItem()));
+        Tierify.LOGGER.info("Reforge before data -> {}", itemStack.get(net.minecraft.component.DataComponentTypes.CUSTOM_DATA));
+        Tierify.LOGGER.info("[TierifyDebug][Reforge] input_item={} input_tier={} reforge_material={}", Registries.ITEM.getId(itemStack.getItem()), beforeTier, Registries.ITEM.getId(this.getSlot(2).getStack().getItem()));
         ModifierUtils.removeItemStackAttribute(itemStack);
         ModifierUtils.setItemStackAttribute(player, itemStack, true, this.getSlot(2).getStack());
+        Identifier afterTier = ModifierUtils.getAttributeID(itemStack);
+        Tierify.LOGGER.info("Reforge after data -> {}", itemStack.get(net.minecraft.component.DataComponentTypes.CUSTOM_DATA));
+        Tierify.LOGGER.info("[TierifyDebug][Reforge] result_item={} result_tier={}", Registries.ITEM.getId(itemStack.getItem()), afterTier);
 
         if (Registries.SOUND_EVENT.get(getReforgeSound(ModifierUtils.getAttributeID(itemStack))) !=null) {
             SoundEvent soundEvent = Registries.SOUND_EVENT.get(getReforgeSound(ModifierUtils.getAttributeID(itemStack)));

@@ -26,6 +26,7 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 
 @Environment(EnvType.CLIENT)
@@ -42,6 +43,7 @@ public class DrawContextMixin {
 
         NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
         if (Tierify.CLIENT_CONFIG.tieredTooltip && component != null && component.getNbt().contains("Tiered")) {
+            Tierify.LOGGER.info("Rendering bordered tooltip for {}", Registries.ITEM.getId(stack.getItem()));
             String nbtString = component.getNbt().getCompound("Tiered").asString();
             for (int i = 0; i < TierifyClient.BORDER_TEMPLATES.size(); i++) {
                 if (!TierifyClient.BORDER_TEMPLATES.get(i).containsStack(stack) && TierifyClient.BORDER_TEMPLATES.get(i).containsDecider(nbtString)) {

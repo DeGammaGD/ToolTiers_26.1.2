@@ -4,13 +4,11 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.libz.registry.TabRegistry;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
-import net.minecraft.resource.ResourceType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -23,11 +21,9 @@ import java.util.Map;
 import draylar.tiered.api.BorderTemplate;
 import draylar.tiered.api.PotentialAttribute;
 import elocindev.tierify.data.AttributeDataLoader;
-import elocindev.tierify.data.TooltipBorderLoader;
 import elocindev.tierify.network.TieredClientPacket;
 import elocindev.tierify.screen.ReforgeScreenHandler;
 import elocindev.tierify.screen.client.ReforgeScreen;
-import elocindev.tierify.screen.client.widget.AnvilTab;
 import elocindev.tierify.screen.client.widget.ReforgeTab;
 
 @Environment(EnvType.CLIENT)
@@ -38,7 +34,6 @@ public class TierifyClient implements ClientModInitializer {
 
     public static final List<BorderTemplate> BORDER_TEMPLATES = new ArrayList<BorderTemplate>();
 
-    private static final Identifier ANVIL_TAB_ICON = Identifier.of("tiered:textures/gui/anvil_tab_icon.png");
     private static final Identifier REFORGE_TAB_ICON = Identifier.of("tiered:textures/gui/reforge_tab_icon.png");
     
     @Override
@@ -47,9 +42,13 @@ public class TierifyClient implements ClientModInitializer {
         registerReforgeItemSyncHandler();
         HandledScreens.<ReforgeScreenHandler, ReforgeScreen>register(Tierify.REFORGE_SCREEN_HANDLER_TYPE, ReforgeScreen::new);
         TieredClientPacket.init();
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new TooltipBorderLoader());
-        TabRegistry.registerOtherTab(new AnvilTab(Text.translatable("container.repair"), ANVIL_TAB_ICON, 0, AnvilScreen.class), AnvilScreen.class);
-        TabRegistry.registerOtherTab(new ReforgeTab(Text.translatable("screen.tiered.reforging_screen"), REFORGE_TAB_ICON, 1, ReforgeScreen.class), AnvilScreen.class);
+        // TODO(1.21.1-stabilization): Restore optional tooltip border addon once core tooltip text flow is stable.
+        // ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new TooltipBorderLoader());
+
+        // TODO(1.21.1-stabilization): Restore custom Anvil tab navigation after reforge flow is fully validated.
+        // TabRegistry.registerOtherTab(new AnvilTab(Text.translatable("container.repair"), ANVIL_TAB_ICON, 0, AnvilScreen.class), AnvilScreen.class);
+        // TODO(1.21.1-stabilization): Keep custom Reforge/Anvil tab UI disabled; do not inject extra tabs into vanilla anvil screen.
+        // TabRegistry.registerOtherTab(new ReforgeTab(Text.translatable("screen.tiered.reforging_screen"), REFORGE_TAB_ICON, 1, ReforgeScreen.class), AnvilScreen.class);
     }
 
     public static void registerAttributeSyncHandler() {

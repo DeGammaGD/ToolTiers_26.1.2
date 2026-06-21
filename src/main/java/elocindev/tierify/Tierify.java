@@ -58,6 +58,8 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class Tierify implements ModInitializer {
 
+    public static final boolean CORE_STABILIZATION_MODE = true;
+
     public static CommonConfig CONFIG = new CommonConfig();
     public static ClientConfig CLIENT_CONFIG = new ClientConfig();
 
@@ -140,6 +142,7 @@ public class Tierify implements ModInitializer {
     public static final String NBT_SUBTAG_KEY = "Tiered";
     public static final String NBT_SUBTAG_DATA_KEY = "Tier";
     public static final String NBT_SUBTAG_TEMPLATE_DATA_KEY = "Template";
+    public static final String NBT_SUBTAG_MARKER_KEY = "TieredAssigned";
 
     @Override
     public void onInitialize() {
@@ -151,9 +154,14 @@ public class Tierify implements ModInitializer {
         CLIENT_CONFIG = AutoConfig.getConfigHolder(ClientConfig.class).getConfig();
 
         TieredItemTags.init();
-        ItemRegistry.init();
+        // TODO(1.21.1-stabilization): Temporarily disable custom ore/reforge material item registration.
+        // Keep ItemRegistry classes intact and restore once the core tier pipeline is fully validated.
+        // ItemRegistry.init();
         CustomEntityAttributes.init();
-        CommandInit.init();
+        if (!CORE_STABILIZATION_MODE) {
+            // TODO(1.21.1-stabilization): Restore command registration after core systems are stable.
+            CommandInit.init();
+        }
         registerAttributeSyncer();
         registerReforgeItemSyncer();
         SoundRegistry.registerSounds();
@@ -173,11 +181,14 @@ public class Tierify implements ModInitializer {
             // setupModifierLabel();
         }
 
-        ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of("ingredients"))).register(content -> {
-            content.addAfter(Items.RAW_IRON, ItemRegistry.LIMESTONE_CHUNK);
-            content.addAfter(Items.ANCIENT_DEBRIS, ItemRegistry.RAW_PYRITE);
-            content.addAfter(Items.AMETHYST_SHARD, ItemRegistry.RAW_GALENA);
-        });
+        if (!CORE_STABILIZATION_MODE) {
+            // TODO(1.21.1-stabilization): Restore ingredient tab entries for custom reforge materials.
+            ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of("ingredients"))).register(content -> {
+                content.addAfter(Items.RAW_IRON, ItemRegistry.LIMESTONE_CHUNK);
+                content.addAfter(Items.ANCIENT_DEBRIS, ItemRegistry.RAW_PYRITE);
+                content.addAfter(Items.AMETHYST_SHARD, ItemRegistry.RAW_GALENA);
+            });
+        }
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, serverResourceManager, success) -> {
             if (success) {

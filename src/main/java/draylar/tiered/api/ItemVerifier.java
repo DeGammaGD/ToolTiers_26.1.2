@@ -1,12 +1,14 @@
 package draylar.tiered.api;
 
-import elocindev.tierify.Tierify;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ItemVerifier {
 
@@ -42,17 +44,89 @@ public class ItemVerifier {
         if (id != null) {
             return itemID.equals(id);
         } else if (tag != null) {
-            TagKey<Item> itemTag = TagKey.of(RegistryKeys.ITEM, Identifier.of(tag));
-            // TagKey<Item> itemTag = ItemTags.getTagGroup().getTag(Identifier.of(tag));
+            List<TagKey<Item>> candidates = resolveCandidateTags(tag);
+            RegistryEntry<Item> itemEntry = Registries.ITEM.getEntry(Identifier.of(itemID)).orElse(null);
+            if (itemEntry == null) {
+                return false;
+            }
 
-            if (itemTag != null) {
-                return new ItemStack(Registries.ITEM.get(Identifier.of(itemID))).isIn(itemTag);// itemTag.contains(Registry.ITEM.get(Identifier.of(itemID)));
-            } else {
-                Tierify.LOGGER.error(tag + " was specified as an item verifier tag, but it does not exist!");
+            for (TagKey<Item> candidate : candidates) {
+                if (itemEntry.isIn(candidate)) {
+                    return true;
+                }
             }
         }
 
         return false;
+    }
+
+    private static List<TagKey<Item>> resolveCandidateTags(String rawTag) {
+        List<TagKey<Item>> candidates = new ArrayList<>();
+        candidates.add(TagKey.of(RegistryKeys.ITEM, Identifier.of(rawTag)));
+
+        if (!rawTag.startsWith("c:")) {
+            return candidates;
+        }
+
+        String path = rawTag.substring(2);
+        switch (path) {
+            case "axes" -> {
+                addCandidate(candidates, "c:tools/axes");
+                addCandidate(candidates, "minecraft:axes");
+            }
+            case "pickaxes" -> {
+                addCandidate(candidates, "c:tools/pickaxes");
+                addCandidate(candidates, "minecraft:pickaxes");
+            }
+            case "shovels" -> {
+                addCandidate(candidates, "c:tools/shovels");
+                addCandidate(candidates, "minecraft:shovels");
+            }
+            case "hoes" -> {
+                addCandidate(candidates, "c:tools/hoes");
+                addCandidate(candidates, "minecraft:hoes");
+            }
+            case "swords" -> {
+                addCandidate(candidates, "c:tools/swords");
+                addCandidate(candidates, "minecraft:swords");
+            }
+            case "bows" -> {
+                addCandidate(candidates, "c:tools/bows");
+                addCandidate(candidates, "minecraft:bows");
+            }
+            case "crossbows" -> {
+                addCandidate(candidates, "c:tools/crossbows");
+                addCandidate(candidates, "minecraft:crossbows");
+            }
+            case "shields" -> {
+                addCandidate(candidates, "c:tools/shields");
+                addCandidate(candidates, "minecraft:shields");
+            }
+            case "helmets" -> {
+                addCandidate(candidates, "c:armors/helmets");
+                addCandidate(candidates, "minecraft:head_armor");
+            }
+            case "chestplates" -> {
+                addCandidate(candidates, "c:armors/chestplates");
+                addCandidate(candidates, "minecraft:chest_armor");
+            }
+            case "leggings" -> {
+                addCandidate(candidates, "c:armors/leggings");
+                addCandidate(candidates, "minecraft:leg_armor");
+            }
+            case "boots" -> {
+                addCandidate(candidates, "c:armors/boots");
+                addCandidate(candidates, "minecraft:foot_armor");
+            }
+            default -> {
+            }
+        }
+
+        return candidates;
+    }
+
+    private static void addCandidate(List<TagKey<Item>> candidates, String rawTag) {
+        candidates.add(TagKey.of(RegistryKeys.ITEM, Identifier.of(rawTag)));
     }
 
     public String getId() {
