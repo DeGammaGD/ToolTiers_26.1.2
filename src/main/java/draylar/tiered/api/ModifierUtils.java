@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.jetbrains.annotations.Nullable;
@@ -30,6 +31,12 @@ import elocindev.tierify.Tierify;
 import elocindev.tierify.compat.ItemBordersCompat;
 
 public class ModifierUtils {
+
+    private static boolean isSpearDebugItem(Item item) {
+        Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
+        String itemIdString = itemId == null ? "" : itemId.toString();
+        return "minecraft:trident".equals(itemIdString) || itemIdString.endsWith(":spear") || itemIdString.contains("_spear");
+    }
 
     private static <T> void sortByWeight(List<Integer> weights, List<T> values) {
         List<Integer> order = new ArrayList<>(weights.size());
@@ -99,6 +106,68 @@ public class ModifierUtils {
         Tierify.LOGGER.info("[TIER DEBUG] source: {} item: {} assigned tier: {}", source, BuiltInRegistries.ITEM.getKey(stack.getItem()), assignedTier);
     }
 
+    private static boolean templateAppliesToSlot(AttributeTemplate template, EquipmentSlot slot) {
+        EquipmentSlot[] requiredSlots = template.getRequiredEquipmentSlots();
+        if (requiredSlots != null) {
+            for (EquipmentSlot requiredSlot : requiredSlots) {
+                if (requiredSlot == slot) {
+                    return true;
+                }
+            }
+        }
+
+        EquipmentSlot[] optionalSlots = template.getOptionalEquipmentSlots();
+        if (optionalSlots != null) {
+            for (EquipmentSlot optionalSlot : optionalSlots) {
+                if (optionalSlot == slot) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isValidAttributeTypeId(String attributeTypeId) {
+        if (attributeTypeId == null || attributeTypeId.isBlank()) {
+            return false;
+        }
+
+        try {
+            return BuiltInRegistries.ATTRIBUTE.get(Identifier.parse(attributeTypeId)).isPresent();
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private static int countUsableModifierTemplates(Item item, PotentialAttribute attribute) {
+        if (attribute == null || attribute.getAttributes() == null || attribute.getAttributes().isEmpty()) {
+            return 0;
+        }
+
+        ItemStack probeStack = new ItemStack(item.builtInRegistryHolder());
+        int usable = 0;
+
+        for (AttributeTemplate template : attribute.getAttributes()) {
+            if (template == null || template.getEntityAttributeModifier() == null || !isValidAttributeTypeId(template.getAttributeTypeID())) {
+                continue;
+            }
+
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                if (!Tierify.isPreferredEquipmentSlot(probeStack, slot)) {
+                    continue;
+                }
+
+                if (templateAppliesToSlot(template, slot)) {
+                    usable++;
+                    break;
+                }
+            }
+        }
+
+        return usable;
+    }
+
     /**
      * Returns the ID of a random attribute that is valid for the given {@link Item} in {@link Identifier} form.
      * <p>
@@ -111,18 +180,44 @@ public class ModifierUtils {
     public static Identifier getRandomAttributeIDFor(@Nullable Player playerEntity, Item item, boolean reforge) {
         List<Identifier> potentialAttributes = new ArrayList<>();
         List<Integer> attributeWeights = new ArrayList<>();
+        Map<Identifier, Integer> modifierPoolByTier = new HashMap<>();
+        boolean spearDebug = isSpearDebugItem(item);
+        Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
         // collect all valid attributes for the given item and their weights
 
         Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
-            if (attribute.isValid(BuiltInRegistries.ITEM.getKey(item)) && (attribute.getWeight() > 0 || reforge)) {
-                potentialAttributes.add(Identifier.parse(attribute.getID()));
+            boolean verifierResult = attribute.isValid(itemId);
+            boolean weightAllowed = attribute.getWeight() > 0 || reforge;
+            Identifier candidateId = Identifier.parse(attribute.getID());
+
+            if (!verifierResult || !weightAllowed) {
+                if (spearDebug) {
+                    Tierify.LOGGER.info("[TierifyDebug][TierDecision] item={} tier={} verifierResult={} weightAllowed={} decision=skip", itemId, candidateId, verifierResult, weightAllowed);
+                }
+                return;
+            }
+
+            int modifierPool = countUsableModifierTemplates(item, attribute);
+            if (modifierPool > 0) {
+                potentialAttributes.add(candidateId);
                 attributeWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
+                modifierPoolByTier.put(candidateId, modifierPool);
+                if (spearDebug) {
+                    Tierify.LOGGER.info("[TierifyDebug][TierDecision] item={} tier={} verifierResult={} weightAllowed={} modifierPool={} decision=include", itemId, candidateId, verifierResult, weightAllowed, modifierPool);
+                }
+            } else {
+                Tierify.LOGGER.info("Skipping tier {} for {} because modifier pool is empty", candidateId, BuiltInRegistries.ITEM.getKey(item));
+                if (spearDebug) {
+                    Tierify.LOGGER.info("[TierifyDebug][TierDecision] item={} tier={} verifierResult={} weightAllowed={} modifierPool={} decision=skip_pool_empty", itemId, candidateId, verifierResult, weightAllowed, modifierPool);
+                }
             }
         });
         if (potentialAttributes.size() <= 0) {
             Tierify.LOGGER.info("No tier candidates found for {} (reforge={})", BuiltInRegistries.ITEM.getKey(item), reforge);
             return null;
         }
+
+        Tierify.LOGGER.info("Tier candidate pool for {} (reforge={}) -> {}", BuiltInRegistries.ITEM.getKey(item), reforge, potentialAttributes.stream().map(id -> id + "[pool=" + modifierPoolByTier.getOrDefault(id, 0) + "]").toList());
 
         if (reforge && attributeWeights.size() > 2) {
             sortByWeight(attributeWeights, potentialAttributes);
@@ -153,14 +248,14 @@ public class ModifierUtils {
 
             for (int i = 0; i < attributeWeights.size(); i++) {
                 if (randomChoice < attributeWeights.get(i)) {
-                    Tierify.LOGGER.info("Selected tier {} for {} (reforge={})", potentialAttributes.get(i), BuiltInRegistries.ITEM.getKey(item), reforge);
+                    Tierify.LOGGER.info("Selected tier {} for {} (reforge={}) modifierPool={}", potentialAttributes.get(i), BuiltInRegistries.ITEM.getKey(item), reforge, modifierPoolByTier.getOrDefault(potentialAttributes.get(i), 0));
                     return potentialAttributes.get(i);
                 }
                 randomChoice -= attributeWeights.get(i);
             }
             // If random choice didn't work
             Identifier fallback = potentialAttributes.get(new Random().nextInt(potentialAttributes.size()));
-            Tierify.LOGGER.info("Selected fallback tier {} for {} (reforge={})", fallback, BuiltInRegistries.ITEM.getKey(item), reforge);
+            Tierify.LOGGER.info("Selected fallback tier {} for {} (reforge={}) modifierPool={}", fallback, BuiltInRegistries.ITEM.getKey(item), reforge, modifierPoolByTier.getOrDefault(fallback, 0));
             return fallback;
         } else
             return null;
@@ -287,8 +382,15 @@ public class ModifierUtils {
             }
 
             setCustomData(stack, root);
-            rebuildAttributeModifiersComponent(stack);
+            int modifierPoolSize = countUsableModifierTemplates(stack.getItem(), assignedAttribute);
+            int appliedCount = rebuildAttributeModifiersComponent(stack);
+            Tierify.LOGGER.info("[TierifyDebug][ModifierAssign] item={} tierSelected={} modifierPoolFound={} modifiersAppliedCount={}", BuiltInRegistries.ITEM.getKey(stack.getItem()), potentialAttributeID, modifierPoolSize, appliedCount);
+            if (appliedCount == 0) {
+                Tierify.LOGGER.warn("No modifiers applied for item={} tier={} despite assignment; reason=pool_empty_or_slot_mismatch_or_invalid_attribute_type", BuiltInRegistries.ITEM.getKey(stack.getItem()), potentialAttributeID);
+            }
             Tierify.LOGGER.info("[TierifyDebug][Create] item={} tier={} attributes={}", BuiltInRegistries.ITEM.getKey(stack.getItem()), potentialAttributeID, attributeList);
+        } else {
+            Tierify.LOGGER.warn("Tier assignment skipped for {} because no valid tier was selected", BuiltInRegistries.ITEM.getKey(stack.getItem()));
         }
     }
 
@@ -395,39 +497,42 @@ public class ModifierUtils {
             return modifiers;
         }
 
+        int malformedTemplateCount = 0;
+        int slotMismatchCount = 0;
+        int missingAttributeTypeCount = 0;
         Tierify.LOGGER.info("Generating modifiers for {} using tier {} and attributes {}", BuiltInRegistries.ITEM.getKey(itemStack.getItem()), tierId, potentialAttribute.getAttributes());
         for (AttributeTemplate template : potentialAttribute.getAttributes()) {
-            EquipmentSlot[] requiredSlots = template.getRequiredEquipmentSlots();
-            EquipmentSlot[] optionalSlots = template.getOptionalEquipmentSlots();
-
-            boolean applies = false;
-            if (requiredSlots != null) {
-                for (EquipmentSlot requiredSlot : requiredSlots) {
-                    if (requiredSlot == slot) {
-                        applies = true;
-                        break;
-                    }
-                }
-            }
-            if (!applies && optionalSlots != null) {
-                for (EquipmentSlot optionalSlot : optionalSlots) {
-                    if (optionalSlot == slot) {
-                        applies = true;
-                        break;
-                    }
-                }
+            if (template == null || template.getEntityAttributeModifier() == null) {
+                malformedTemplateCount++;
+                continue;
             }
 
-            if (applies) {
-                template.realize(modifiers, slot);
+            boolean applies = templateAppliesToSlot(template, slot);
+            if (!applies) {
+                slotMismatchCount++;
+                continue;
             }
+
+            if (!isValidAttributeTypeId(template.getAttributeTypeID())) {
+                missingAttributeTypeCount++;
+                continue;
+            }
+
+            template.realize(modifiers, slot);
         }
 
-        Tierify.LOGGER.info("Generated modifiers for {} in {} -> {}", BuiltInRegistries.ITEM.getKey(itemStack.getItem()), slot.getName(), modifiers);
+        Tierify.LOGGER.info("Generated modifiers for {} in {} -> {} (appliedCount={}, malformed={}, slotMismatch={}, missingAttributeType={})",
+                BuiltInRegistries.ITEM.getKey(itemStack.getItem()),
+                slot.getName(),
+                modifiers,
+                modifiers.size(),
+                malformedTemplateCount,
+                slotMismatchCount,
+                missingAttributeTypeCount);
         return modifiers;
     }
 
-    public static void rebuildAttributeModifiersComponent(ItemStack itemStack) {
+    public static int rebuildAttributeModifiersComponent(ItemStack itemStack) {
         ItemAttributeModifiers baseComponent = new ItemStack(itemStack.getItem().builtInRegistryHolder(), itemStack.getCount())
                 .getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
 
@@ -451,6 +556,7 @@ public class ModifierUtils {
             builder.add(entry.attribute(), entry.modifier(), slotGroup);
         }
 
+        int appliedModifierCount = 0;
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (!Tierify.isPreferredEquipmentSlot(itemStack, slot)) {
                 continue;
@@ -458,12 +564,14 @@ public class ModifierUtils {
             Multimap<Holder<Attribute>, AttributeModifier> generated = buildTierAttributeMap(itemStack, slot);
             for (java.util.Map.Entry<Holder<Attribute>, AttributeModifier> entry : generated.entries()) {
                 builder.add(entry.getKey(), entry.getValue(), EquipmentSlotGroup.bySlot(slot));
+                appliedModifierCount++;
             }
         }
 
         ItemAttributeModifiers rebuilt = builder.build();
         itemStack.set(DataComponents.ATTRIBUTE_MODIFIERS, rebuilt);
-        Tierify.LOGGER.info("Rebuilt attribute modifiers for {} -> {}", BuiltInRegistries.ITEM.getKey(itemStack.getItem()), rebuilt.modifiers());
+        Tierify.LOGGER.info("Rebuilt attribute modifiers for {} -> {} (appliedModifierCount={})", BuiltInRegistries.ITEM.getKey(itemStack.getItem()), rebuilt.modifiers(), appliedModifierCount);
+        return appliedModifierCount;
     }
 
 }

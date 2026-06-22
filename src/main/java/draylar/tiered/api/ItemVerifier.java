@@ -8,6 +8,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import elocindev.tierify.Tierify;
 
 public class ItemVerifier {
 
@@ -41,22 +42,59 @@ public class ItemVerifier {
      */
     public boolean isValid(String itemID) {
         if (id != null) {
-            return itemID.equals(id);
+            boolean result = itemID.equals(id);
+            logVerifierResult(itemID, "id=" + id, result);
+            return result;
         } else if (tag != null) {
             List<TagKey<Item>> candidates = resolveCandidateTags(tag);
             Holder<Item> itemEntry = BuiltInRegistries.ITEM.get(Identifier.parse(itemID)).orElse(null);
             if (itemEntry == null) {
+                logVerifierResult(itemID, "tag=" + tag, false);
                 return false;
             }
 
             for (TagKey<Item> candidate : candidates) {
                 if (itemEntry.is(candidate)) {
+                    logVerifierResult(itemID, "tag=" + tag, true);
                     return true;
                 }
             }
+
+            boolean fallbackResult = matchesKnownItemFallback(tag, itemID);
+            logVerifierResult(itemID, "tag=" + tag + " (fallback)", fallbackResult);
+            return fallbackResult;
         }
 
         return false;
+    }
+
+    private static void logVerifierResult(String itemID, String verifier, boolean result) {
+        if (!isSpearRelatedItem(itemID) && !isSpearRelatedVerifier(verifier)) {
+            return;
+        }
+
+        Tierify.LOGGER.info("[TierifyDebug][Verifier] item={} verifier={} result={}", itemID, verifier, result);
+    }
+
+    private static boolean isSpearRelatedItem(String itemID) {
+        return "minecraft:trident".equals(itemID) || itemID.endsWith(":spear") || itemID.contains("_spear");
+    }
+
+    private static boolean isSpearRelatedVerifier(String verifier) {
+        return verifier.contains("spears") || verifier.contains("trident") || verifier.contains("spear");
+    }
+
+    private static boolean matchesKnownItemFallback(String rawTag, String itemID) {
+        return switch (rawTag) {
+            case "c:bows", "c:tools/bows", "minecraft:bows" -> "minecraft:bow".equals(itemID);
+            case "c:crossbows", "c:tools/crossbows", "minecraft:crossbows" -> "minecraft:crossbow".equals(itemID);
+            case "c:shields", "c:tools/shields", "minecraft:shields" -> "minecraft:shield".equals(itemID);
+            case "c:shears", "c:tools/shears", "minecraft:shears" -> "minecraft:shears".equals(itemID);
+            case "c:flint_and_steel", "c:tools/flint_and_steel", "minecraft:flint_and_steel" -> "minecraft:flint_and_steel".equals(itemID);
+            case "c:maces", "c:tools/maces", "minecraft:maces" -> "minecraft:mace".equals(itemID);
+            case "c:spears", "c:tools/spears", "minecraft:spears" -> "minecraft:trident".equals(itemID) || itemID.endsWith(":spear") || itemID.contains("_spear");
+            default -> false;
+        };
     }
 
     private static List<TagKey<Item>> resolveCandidateTags(String rawTag) {
@@ -89,17 +127,33 @@ public class ItemVerifier {
                 addCandidate(candidates, "c:tools/swords");
                 addCandidate(candidates, "minecraft:swords");
             }
-            case "bows" -> {
+            case "bows", "tools/bows" -> {
                 addCandidate(candidates, "c:tools/bows");
                 addCandidate(candidates, "minecraft:bows");
             }
-            case "crossbows" -> {
+            case "crossbows", "tools/crossbows" -> {
                 addCandidate(candidates, "c:tools/crossbows");
                 addCandidate(candidates, "minecraft:crossbows");
             }
-            case "shields" -> {
+            case "shields", "tools/shields" -> {
                 addCandidate(candidates, "c:tools/shields");
                 addCandidate(candidates, "minecraft:shields");
+            }
+            case "shears", "tools/shears" -> {
+                addCandidate(candidates, "c:tools/shears");
+                addCandidate(candidates, "minecraft:shears");
+            }
+            case "flint_and_steel", "tools/flint_and_steel" -> {
+                addCandidate(candidates, "c:tools/flint_and_steel");
+                addCandidate(candidates, "minecraft:flint_and_steel");
+            }
+            case "spears", "tools/spears" -> {
+                addCandidate(candidates, "c:tools/spears");
+                addCandidate(candidates, "minecraft:spears");
+            }
+            case "maces", "tools/maces" -> {
+                addCandidate(candidates, "c:tools/maces");
+                addCandidate(candidates, "minecraft:maces");
             }
             case "helmets" -> {
                 addCandidate(candidates, "c:armors/helmets");

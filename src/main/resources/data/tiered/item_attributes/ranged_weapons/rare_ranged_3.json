@@ -1,4 +1,4 @@
-{
+﻿{
     "id": "tiered:rare_ranged_3",
     "verifiers": [
         {
@@ -21,8 +21,7 @@
                 "amount": 0.05
             },
             "optional_equipment_slots": [
-                "MAINHAND",
-                "OFFHAND"
+                "MAINHAND"
             ]
         }
     ]

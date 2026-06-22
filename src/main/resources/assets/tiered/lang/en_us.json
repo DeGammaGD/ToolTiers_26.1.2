@@ -232,6 +232,66 @@
   "tiered:mythic_staffwand_1.label": "Mythic",
   "tiered:mythic_staffwand_2.label": "Mythic",
 
+  "tiered:common_spear_1.label": "Common",
+  "tiered:common_spear_2.label": "Common",
+  "tiered:common_spear_3.label": "Common",
+  "tiered:common_spear_4.label": "Common",
+
+  "tiered:common_mace_1.label": "Common",
+  "tiered:common_mace_2.label": "Common",
+  "tiered:common_mace_3.label": "Common",
+  "tiered:common_mace_4.label": "Common",
+
+  "tiered:uncommon_spear_1.label": "Uncommon",
+  "tiered:uncommon_spear_2.label": "Uncommon",
+  "tiered:uncommon_spear_3.label": "Uncommon",
+  "tiered:uncommon_spear_4.label": "Uncommon",
+
+  "tiered:uncommon_mace_1.label": "Uncommon",
+  "tiered:uncommon_mace_2.label": "Uncommon",
+  "tiered:uncommon_mace_3.label": "Uncommon",
+  "tiered:uncommon_mace_4.label": "Uncommon",
+
+  "tiered:rare_spear_1.label": "Rare",
+  "tiered:rare_spear_2.label": "Rare",
+  "tiered:rare_spear_3.label": "Rare",
+  "tiered:rare_spear_4.label": "Rare",
+
+  "tiered:rare_mace_1.label": "Rare",
+  "tiered:rare_mace_2.label": "Rare",
+  "tiered:rare_mace_3.label": "Rare",
+  "tiered:rare_mace_4.label": "Rare",
+
+  "tiered:epic_spear_1.label": "Epic",
+  "tiered:epic_spear_2.label": "Epic",
+  "tiered:epic_spear_3.label": "Epic",
+  "tiered:epic_spear_4.label": "Epic",
+
+  "tiered:epic_mace_1.label": "Epic",
+  "tiered:epic_mace_2.label": "Epic",
+  "tiered:epic_mace_3.label": "Epic",
+  "tiered:epic_mace_4.label": "Epic",
+
+  "tiered:legendary_spear_1.label": "Legendary",
+  "tiered:legendary_spear_2.label": "Legendary",
+  "tiered:legendary_spear_3.label": "Legendary",
+  "tiered:legendary_spear_4.label": "Legendary",
+
+  "tiered:legendary_mace_1.label": "Legendary",
+  "tiered:legendary_mace_2.label": "Legendary",
+  "tiered:legendary_mace_3.label": "Legendary",
+  "tiered:legendary_mace_4.label": "Legendary",
+
+  "tiered:mythic_spear_1.label": "Mythic",
+  "tiered:mythic_spear_2.label": "Mythic",
+  "tiered:mythic_spear_3.label": "Mythic",
+  "tiered:mythic_spear_4.label": "Mythic",
+
+  "tiered:mythic_mace_1.label": "Mythic",
+  "tiered:mythic_mace_2.label": "Mythic",
+  "tiered:mythic_mace_3.label": "Mythic",
+  "tiered:mythic_mace_4.label": "Mythic",
+
   "tiered:common.label": "Common",
   "tiered:uncommon.label": "Uncommon",
   "tiered:rare.label": "Rare",

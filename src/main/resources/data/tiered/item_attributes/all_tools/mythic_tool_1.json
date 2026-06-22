@@ -1,4 +1,4 @@
-{
+﻿{
     "id": "tiered:mythic_tool_1",
     "verifiers": [
         {
@@ -12,6 +12,12 @@
         },
         {
             "tag": "c:hoes"
+        },
+        {
+            "tag": "c:shears"
+        },
+        {
+            "tag": "c:flint_and_steel"
         }
     ],
     "weight": 0,
@@ -45,3 +51,4 @@
         }
     ]
 }
+
