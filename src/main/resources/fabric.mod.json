@@ -2,14 +2,16 @@
   "schemaVersion": 1,
   "id": "tiered",
   "version": "${version}",
-  "name": "Tierify",
+  "name": "ToolTiers",
   "description": "Adds quality tiers to armor, weapons and tools.",
   "authors": [
+    "DeGammaGD",
     "ElocinDev",
     "Draylar (Tiered)",
     "Globox_Z (TieredZ)"
   ],
   "contributors": [
+    "nvb-uy port (to Minecraft 1.21.1)",
     "Sweenuss (Contributor)",
     "Helton Yan (Sound Assets)"
   ],

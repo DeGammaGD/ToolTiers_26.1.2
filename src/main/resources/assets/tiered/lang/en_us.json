@@ -299,8 +299,8 @@
   "tiered:legendary.label": "Legendary",
   "tiered:mythic.label": "Mythic",
 
-  "text.autoconfig.tiered-client.title": "Tierify Config",
-  "text.autoconfig.tiered-client.category.default": "Tierify Settings",
+  "text.autoconfig.tiered-client.title": "ToolTiers Config",
+  "text.autoconfig.tiered-client.category.default": "ToolTiers Settings",
   "text.autoconfig.tiered-client.category.client_settings": "Client Settings",
   "text.autoconfig.tiered-client.option.lootContainerModifier": "Loot Container Modifier",
   "text.autoconfig.tiered-client.option.entityItemModifier": "Entity Item Modifier",

@@ -1,21 +1,38 @@
 # ToolTiers
 
-ToolTiers is a Minecraft 26.1.2 Fabric port and continuation of the Tiered concept, focused on standalone tier-based item progression.
+ToolTiers is a Minecraft 26.1.2 Fabric port and continuation of the **Tiered** concept, with roots in the community-driven **Tierify** project. This mod adds randomized quality tiers to tools, weapons, and armor with attribute-based progression and customization.
 
+ToolTiers continues the development of tier-based item progression with modern Minecraft version support (26.1.2) and an improved data-driven architecture.
 
-
-The original mod, Tiered, is inspired by [Quality Tools](https://www.curseforge.com/minecraft/mc-mods/quality-tools).
+The original mod, **Tiered**, is inspired by [Quality Tools](https://www.curseforge.com/minecraft/mc-mods/quality-tools).
 
 <img src="resources/legendary_chestplate.png" width="400">
 
 ## Features
 
-- Tier generation for tools and armor
-- Randomized item qualities
-- Attribute modifiers
-- Custom tooltip styling and borders
-- Data-driven modifiers
-- Reforging system (WiP)
+### Currently Functional
+
+- **Random Item Tiers**: Tools, armor, and weapons receive random quality tiers
+- **Tier Names**: Display names for tiers (Common, Uncommon, Rare, Epic, Legendary, Mythic)
+- **Attribute Modifiers**: Apply attributes like damage, speed, armor, crit chance, and more
+- **Custom Tooltip Styling**: Tier-specific tooltip borders and colors
+- **Weapon Support**:
+  - Swords
+  - Axes
+  - Bows
+  - Crossbows
+  - Spears (Tridents)
+  - Maces
+  - Shields
+  - Utility tools
+- **Armor and Tools**: Full support for all vanilla armor and tool categories
+- **Data-Driven Customization**: JSON-based item attributes and tier definitions
+
+### In Development
+
+- **Reforging System**: Under development, currently unavailable
+- **Additional Item Categories**: Expanding support for more items
+- **Enhanced Customization**: Additional configuration options
 
 ## 26.1.2 Port
 
@@ -36,7 +53,16 @@ ToolTiers requires:
 
 ## Customization
 
-ToolTiers is data-driven, which means you can add, modify, and remove modifiers as needed. The base path for modifiers is `data/modid/item_attributes`, and tier modifiers are stored under the Tiered mod id.
+ToolTiers uses a **data-driven system** for all item tier definitions and attributes. This allows for easy customization and extension without code changes.
+
+### System Architecture
+
+- **Internal Namespace**: Uses mod id `tiered` internally for compatibility and data organization
+- **Item Attributes**: Stored in `data/tiered/item_attributes/`
+- **Tier Definitions**: JSON-based tier templates with attributes, styles, and weights
+- **Custom Verifiers**: ToolTiers uses its own item verification system to match items against tier requirements
+
+You can add, modify, and remove tier modifiers by editing the JSON files in `data/tiered/item_attributes/`.
 
 Example modifier:
 
@@ -82,19 +108,23 @@ Types include: `generic.armor`, `generic.armor_toughness`, `generic.dig_speed`, 
 
 ### Verifiers
 
-A verifier defines whether a given tag or item id is valid for a modifier.
+ToolTiers uses a custom verifier system to determine whether items are eligible for specific tier attributes.
 
-Item id example:
+**Item ID Example:**
 
 ```json
 "id": "minecraft:apple"
 ```
 
-Tag example:
+**Tag Example (Convention Tags):**
 
 ```json
 "tag": "c:helmets"
 ```
+
+**Fallback Matching:**
+
+ToolTiers includes intelligent fallback matching for common item patterns (e.g., items ending with `_pickaxe`, `_sword`, `_spear`) to ensure comprehensive coverage.
 
 
 ### Weight
@@ -143,25 +173,37 @@ Example:
 
 ### Reforge
 
+**Status:** Under Development - Reforge functionality is currently unavailable and will be enabled in a future release.
 
+Once complete, Reforge will allow players to reset and reassign item tiers.
 
 ## Status
 
-ToolTiers is currently under active development.
+**Version:** 1.2.0  
+**Minecraft:** 26.1.2  
+**Loader:** Fabric  
+**Mappings:** Mojmap  
+**State:** Work in Progress
 
-The 26.1.2 port is functional:
+### Current State
 
-- Game launches
-- World loading works
-- Tier assignment works
-- Core systems are being refined
+- ✅ Game launches and loads worlds correctly
+- ✅ Core tier system is fully functional
+- ✅ Tier assignment and attribute application working
+- ✅ All supported items receive appropriate tiers
+- ⚠️ Reforge system under development
+- 🔄 Additional features and categories planned
 
 ## Credits
 
-- Draylar1 - original Tiered mod
-- Globox_Z - TieredZ fork
-- nvb-uy - Tierify fork
-- Ameisin - Tierify_1.21.1 port
+ToolTiers is built on the work of dedicated community developers:
+
+- **Draylar1** - Original creator of [Tiered](https://github.com/Draylar/tiered), the foundational mod that inspired this project
+- **Globox_Z** - Creator of [TieredZ](https://github.com/Globox1997/TieredZ), an early fork continuing Tiered development
+- **Ameisin** - Creator of [Tierify_1.21.1](https://github.com/Ameisin/Tierify_1.21.1), a community port that maintained the mod during version transitions
+- **nvb-uy** - Community maintainer of Tierify, bridging from TieredZ to modern versions
+
+ToolTiers continues this legacy with **Minecraft 26.1.2 support** and focuses on maintaining a clean, data-driven architecture for future extensibility.
 
 ## License
 
