@@ -69,13 +69,11 @@ sourceSets {
 			exclude "elocindev/tierify/mixin/ArrowEntityMixin.java"
 			exclude "elocindev/tierify/mixin/BowItemMixin.java"
 			exclude "elocindev/tierify/mixin/CrossbowItemMixin.java"
-			exclude "elocindev/tierify/mixin/ItemFrameEntityMixin.java"
 			exclude "elocindev/tierify/mixin/LivingEntityMixin.java"
 			exclude "elocindev/tierify/mixin/MerchantScreenHandlerMixin.java"
 			exclude "elocindev/tierify/mixin/PlayerEntityMixin.java"
 			exclude "elocindev/tierify/mixin/SpectralArrowEntityMixin.java"
 			exclude "elocindev/tierify/mixin/TridentEntityMixin.java"
-			exclude "elocindev/tierify/mixin/client/HandledScreenMixin.java"
 		}
 	}
 }

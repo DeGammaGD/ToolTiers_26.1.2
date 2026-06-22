@@ -1,9 +1,8 @@
-<<<<<<< HEAD
 # ToolTiers
 
 ToolTiers is a Minecraft 26.1.2 Fabric port and continuation of the Tiered concept, focused on standalone tier-based item progression.
 
-Formerly known as Tierify during the 1.21.1 porting phase.
+
 
 The original mod, Tiered, is inspired by [Quality Tools](https://www.curseforge.com/minecraft/mc-mods/quality-tools).
 
@@ -16,7 +15,7 @@ The original mod, Tiered, is inspired by [Quality Tools](https://www.curseforge.
 - Attribute modifiers
 - Custom tooltip styling and borders
 - Data-driven modifiers
-- Reforging system
+- Reforging system (WiP)
 
 ## 26.1.2 Port
 
@@ -97,7 +96,6 @@ Tag example:
 "tag": "c:helmets"
 ```
 
-ToolTiers does not ship all tags directly. [AutoTag](https://github.com/apace100/autotag), included with the project, provides common tags. See the [AutoTag README](https://github.com/apace100/autotag#readme).
 
 ### Weight
 
@@ -145,20 +143,7 @@ Example:
 
 ### Reforge
 
-Reforging is handled through the anvil flow using configured base and addition inputs.
 
-The addition slot accepts tier item tags such as `tiered:reforge_tier_1`, `tiered:reforge_tier_2`, and `tiered:reforge_tier_3`. The base slot accepts the configured reforge base material or items in `tiered:reforge_base_item`. Reforge base definitions can be changed through datapacks in `tiered:reforge_items`.
-
-```json
-{
-  "items": [
-    "minecraft:bow"
-  ],
-  "base": [
-    "minecraft:string"
-  ]
-}
-```
 
 ## Status
 
@@ -175,7 +160,8 @@ The 26.1.2 port is functional:
 
 - Draylar1 - original Tiered mod
 - Globox_Z - TieredZ fork
-- DeGammaGD - ToolTiers continuation, 26.1.2 port, maintenance, migration work, and new features
+- nvb-uy - Tierify fork
+- Ameisin - Tierify_1.21.1 port
 
 ## License
 

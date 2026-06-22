@@ -16,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.equipment.Equippable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -252,7 +253,8 @@ public class ModifierUtils {
             // add durability nbt
             List<AttributeTemplate> attributeList = assignedAttribute.getAttributes();
             for (int i = 0; i < attributeList.size(); i++) {
-                if (attributeList.get(i).getAttributeTypeID().equals("tiered:generic.durable")) {
+                String attributeTypeId = attributeList.get(i).getAttributeTypeID();
+                if ("tiered:generic.durable".equals(attributeTypeId)) {
                     if (nbtMap == null) {
                         nbtMap = new HashMap<>();
                     }
@@ -344,7 +346,8 @@ public class ModifierUtils {
 
                 List<AttributeTemplate> attributeList = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier).getAttributes();
                 for (int i = 0; i < attributeList.size(); i++) {
-                    if (attributeList.get(i).getAttributeTypeID().equals("tiered:generic.durable")) {
+                    String attributeTypeId = attributeList.get(i).getAttributeTypeID();
+                    if ("tiered:generic.durable".equals(attributeTypeId)) {
                         nbtKeys.add("durable");
                         break;
                     }
@@ -429,8 +432,23 @@ public class ModifierUtils {
                 .getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
 
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
+
+        Equippable equippable = itemStack.get(DataComponents.EQUIPPABLE);
+        EquipmentSlot armorSlot = null;
+        if (equippable != null) {
+            EquipmentSlot slot = equippable.slot();
+            if (slot == EquipmentSlot.HEAD || slot == EquipmentSlot.CHEST || slot == EquipmentSlot.LEGS || slot == EquipmentSlot.FEET) {
+                armorSlot = slot;
+            }
+        }
+
         for (ItemAttributeModifiers.Entry entry : baseComponent.modifiers()) {
-            builder.add(entry.attribute(), entry.modifier(), entry.slot());
+            EquipmentSlotGroup slotGroup = entry.slot();
+            // Armor items should show their concrete slot header instead of generic "worn".
+            if (armorSlot != null && (slotGroup == EquipmentSlotGroup.ARMOR || slotGroup == EquipmentSlotGroup.BODY)) {
+                slotGroup = EquipmentSlotGroup.bySlot(armorSlot);
+            }
+            builder.add(entry.attribute(), entry.modifier(), slotGroup);
         }
 
         for (EquipmentSlot slot : EquipmentSlot.values()) {

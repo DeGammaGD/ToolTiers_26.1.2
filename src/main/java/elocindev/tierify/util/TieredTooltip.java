@@ -101,6 +101,9 @@ public class TieredTooltip {
             border -= 8;
         }
 
+        Tierify.LOGGER.info("[TooltipDebug] Drawing border texture id={} baseIndex={} normalizedIndex={} secondHalf={} at x={} y={} width={} height={}", borderTemplate.getIdentifier(),
+            borderTemplate.getIndex(), border, secondHalf, n, o, l, m);
+
         // left top corner
         context.blit(RenderPipelines.GUI_TEXTURED, borderTemplate.getIdentifier(), n - 6, o - 6, (float) (0 + secondHalf * 64), (float) (0 + border * 16), 8, 8, 128, 128);
         // right top corner

@@ -7,8 +7,6 @@ import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
-import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -18,29 +16,24 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.phys.AABB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -175,12 +168,6 @@ public class Tierify implements ModInitializer {
             // setupModifierLabel();
         }
 
-        CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.parse("ingredients"))).register(output -> {
-            output.insertAfter(Items.RAW_IRON, ItemRegistry.LIMESTONE_CHUNK);
-            output.insertAfter(Items.ANCIENT_DEBRIS, ItemRegistry.RAW_PYRITE);
-            output.insertAfter(Items.AMETHYST_SHARD, ItemRegistry.RAW_GALENA);
-        });
-
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, serverResourceManager, success) -> {
             if (success) {
                 for (int i = 0; i < server.getPlayerList().getPlayers().size(); i++)
@@ -193,19 +180,8 @@ public class Tierify implements ModInitializer {
             updateItemStackNbt(handler.player.getInventory());
         });
 
-        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            if (!CONFIG.entityItemModifier || !(entity instanceof Mob)) {
-                return;
-            }
 
-            AABB searchBox = entity.getBoundingBox().inflate(1.5D);
-            for (ItemEntity itemEntity : entity.level().getEntitiesOfClass(ItemEntity.class, searchBox, dropped -> !dropped.getItem().isEmpty())) {
-                ModifierUtils.applyTierToItem(itemEntity.getItem());
-                ModifierUtils.logTierDebug("mob_drops", itemEntity.getItem());
-            }
-        });
-        
-       
+
     }
 
     /**

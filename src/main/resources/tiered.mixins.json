@@ -5,6 +5,10 @@
   "mixins": [
     "ItemStackMixin",
     "ItemMixin",
+    "ResultSlotMixin",
+    "CraftingMenuMixin",
+    "InventoryMenuMixin",
+    "ItemFrameEntityMixin",
     "AnvilScreenHandlerMixin",
     "LootTableMixin",
     "MobEntityMixin"
@@ -12,7 +16,8 @@
   "client": [
     "client.ItemStackClientMixin",
     "client.AnvilScreenMixin",
-    "client.DrawContextMixin"
+    "client.DrawContextMixin",
+    "client.HandledScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

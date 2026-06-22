@@ -29,6 +29,7 @@ public class TooltipBorderLoader implements SimpleSynchronousResourceReloadListe
 
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
+        TierifyClient.BORDER_TEMPLATES.clear();
 
         resourceManager.listResources("tooltips", id -> id.getPath().endsWith(".json")).forEach((id, resourceRef) -> {
             try {
@@ -40,7 +41,7 @@ public class TooltipBorderLoader implements SimpleSynchronousResourceReloadListe
                     List<String> decider = new ArrayList<String>();
 
                     for (int i = 0; i < data2.getAsJsonArray("decider").size(); i++)
-                        decider.add("{Tier:\"" + data2.getAsJsonArray("decider").get(i).getAsString() + "\"}");
+                        decider.add(data2.getAsJsonArray("decider").get(i).getAsString());
 
                     TierifyClient.BORDER_TEMPLATES.add(new BorderTemplate(data2.get("index").getAsInt(), data2.get("texture").getAsString(),
                             new BigInteger(data2.get("start_border_gradient").getAsString(), 16).intValue(), new BigInteger(data2.get("end_border_gradient").getAsString(), 16).intValue(),
@@ -50,6 +51,8 @@ public class TooltipBorderLoader implements SimpleSynchronousResourceReloadListe
                 LOGGER.error("Error occurred while loading resource {}. {}", id.toString(), e.toString());
             }
         });
+
+        LOGGER.info("Loaded {} tooltip border templates", TierifyClient.BORDER_TEMPLATES.size());
     }
 
 }
