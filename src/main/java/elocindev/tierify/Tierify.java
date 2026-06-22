@@ -1,7 +1,5 @@
 package elocindev.tierify;
 
-import elocindev.tierify.registry.SoundRegistry;
-import io.netty.buffer.Unpooled;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.fabricmc.api.EnvType;
@@ -26,9 +24,6 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
@@ -42,10 +37,7 @@ import elocindev.tierify.command.CommandInit;
 import elocindev.tierify.config.ClientConfig;
 import elocindev.tierify.config.CommonConfig;
 import elocindev.tierify.data.AttributeDataLoader;
-import elocindev.tierify.data.ReforgeDataLoader;
-import elocindev.tierify.network.TieredServerPacket;
 import elocindev.tierify.registry.ItemRegistry;
-import elocindev.tierify.screen.ReforgeScreenHandler;
 
 import java.util.*;
 
@@ -62,13 +54,6 @@ public class Tierify implements ModInitializer {
      */
     public static final AttributeDataLoader ATTRIBUTE_DATA_LOADER = new AttributeDataLoader();
 
-    /**
-     * data/tiered/reforge_item
-     */
-    public static final ReforgeDataLoader REFORGE_DATA_LOADER = new ReforgeDataLoader();
-
-    public static MenuType<ReforgeScreenHandler> REFORGE_SCREEN_HANDLER_TYPE;
-
     // Same UUIDs as in ArmorItem
     // public static final UUID[] MODIFIERS = new UUID[] { UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B6B"), UUID.fromString("D8499B04-0E66-4726-AB29-64469D734E0D"),
     // UUID.fromString("9F3D476D-C118-4544-8365-64846904B48E"), UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150"), UUID.fromString("4a88bc27-9563-4eeb-96d5-fe50917cc24f"),
@@ -82,10 +67,8 @@ public class Tierify implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static final Identifier ATTRIBUTE_SYNC_PACKET = Identifier.parse("attribute_sync");
-    public static final Identifier REFORGE_ITEM_SYNC_PACKET = Identifier.parse("reforge_item_sync");
 
     public static final CustomPacketPayload.Type<AttributeSyncPayload> ATTRIBUTE_SYNC_PAYLOAD_ID = new CustomPacketPayload.Type<>(ATTRIBUTE_SYNC_PACKET);
-    public static final CustomPacketPayload.Type<ReforgeItemSyncPayload> REFORGE_ITEM_SYNC_PAYLOAD_ID = new CustomPacketPayload.Type<>(REFORGE_ITEM_SYNC_PACKET);
 
     public static final StreamCodec<RegistryFriendlyByteBuf, AttributeSyncPayload> ATTRIBUTE_SYNC_PAYLOAD_CODEC = CustomPacketPayload.codec(
             (payload, buf) -> {
@@ -105,32 +88,6 @@ public class Tierify implements ModInitializer {
             }
     );
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ReforgeItemSyncPayload> REFORGE_ITEM_SYNC_PAYLOAD_CODEC = CustomPacketPayload.codec(
-            (payload, buf) -> {
-                buf.writeInt(payload.reforgeItems().size());
-                payload.reforgeItems().forEach((targetItem, baseItems) -> {
-                    buf.writeIdentifier(targetItem);
-                    buf.writeInt(baseItems.size());
-                    for (Identifier baseItem : baseItems) {
-                        buf.writeIdentifier(baseItem);
-                    }
-                });
-            },
-            buf -> {
-                Map<Identifier, List<Identifier>> reforgeItems = new HashMap<>();
-                int size = buf.readInt();
-                for (int i = 0; i < size; i++) {
-                    Identifier targetItem = buf.readIdentifier();
-                    int baseItemCount = buf.readInt();
-                    List<Identifier> baseItems = new ArrayList<>();
-                    for (int j = 0; j < baseItemCount; j++) {
-                        baseItems.add(buf.readIdentifier());
-                    }
-                    reforgeItems.put(targetItem, baseItems);
-                }
-                return new ReforgeItemSyncPayload(reforgeItems);
-            }
-    );
     public static final String NBT_SUBTAG_KEY = "Tiered";
     public static final String NBT_SUBTAG_DATA_KEY = "Tier";
     public static final String NBT_SUBTAG_TEMPLATE_DATA_KEY = "Template";
@@ -150,18 +107,9 @@ public class Tierify implements ModInitializer {
         CustomEntityAttributes.init();
         CommandInit.init();
         registerAttributeSyncer();
-        registerReforgeItemSyncer();
-        SoundRegistry.registerSounds();
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(Tierify.ATTRIBUTE_DATA_LOADER);
-        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(Tierify.REFORGE_DATA_LOADER);
-
-        REFORGE_SCREEN_HANDLER_TYPE = Registry.register(BuiltInRegistries.MENU, "tiered:reforge",
-                new MenuType<>((syncId, inventory) -> new ReforgeScreenHandler(syncId, inventory, ContainerLevelAccess.NULL), FeatureFlags.VANILLA_SET));
 
         PayloadTypeRegistry.clientboundPlay().register(ATTRIBUTE_SYNC_PAYLOAD_ID, ATTRIBUTE_SYNC_PAYLOAD_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(REFORGE_ITEM_SYNC_PAYLOAD_ID, REFORGE_ITEM_SYNC_PAYLOAD_CODEC);
-
-        TieredServerPacket.init();
         
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             // TODO: Add config stuff for the plate in the tooltip
@@ -239,20 +187,6 @@ public class Tierify implements ModInitializer {
                 serializedAttributes.put(id, AttributeDataLoader.GSON.toJson(attribute));
             });
             ServerPlayNetworking.send(network.player, new AttributeSyncPayload(serializedAttributes));
-        });
-    }
-
-    public static void registerReforgeItemSyncer() {
-        ServerPlayConnectionEvents.JOIN.register((network, packetSender, minecraftServer) -> {
-            Map<Identifier, List<Identifier>> reforgeItems = new HashMap<>();
-            REFORGE_DATA_LOADER.getReforgeIdentifiers().forEach(id -> {
-                List<Identifier> list = new ArrayList<>();
-                REFORGE_DATA_LOADER.getReforgeBaseItems(BuiltInRegistries.ITEM.getValue(id)).forEach(item -> {
-                    list.add(BuiltInRegistries.ITEM.getKey(item));
-                });
-                reforgeItems.put(id, list);
-            });
-            ServerPlayNetworking.send(network.player, new ReforgeItemSyncPayload(reforgeItems));
         });
     }
 
@@ -343,13 +277,6 @@ public class Tierify implements ModInitializer {
         @Override
         public CustomPacketPayload.Type<AttributeSyncPayload> type() {
             return ATTRIBUTE_SYNC_PAYLOAD_ID;
-        }
-    }
-
-    public record ReforgeItemSyncPayload(Map<Identifier, List<Identifier>> reforgeItems) implements CustomPacketPayload {
-        @Override
-        public CustomPacketPayload.Type<ReforgeItemSyncPayload> type() {
-            return REFORGE_ITEM_SYNC_PAYLOAD_ID;
         }
     }
 }

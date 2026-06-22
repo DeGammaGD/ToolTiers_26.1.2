@@ -187,7 +187,7 @@ public class ModifierUtils {
 
         Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
             boolean verifierResult = attribute.isValid(itemId);
-            boolean weightAllowed = attribute.getWeight() > 0 || reforge;
+            boolean weightAllowed = attribute.getWeight() > 0;
             Identifier candidateId = Identifier.parse(attribute.getID());
 
             if (!verifierResult || !weightAllowed) {
@@ -200,7 +200,7 @@ public class ModifierUtils {
             int modifierPool = countUsableModifierTemplates(item, attribute);
             if (modifierPool > 0) {
                 potentialAttributes.add(candidateId);
-                attributeWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
+                attributeWeights.add(attribute.getWeight());
                 modifierPoolByTier.put(candidateId, modifierPool);
                 if (spearDebug) {
                     Tierify.LOGGER.info("[TierifyDebug][TierDecision] item={} tier={} verifierResult={} weightAllowed={} modifierPool={} decision=include", itemId, candidateId, verifierResult, weightAllowed, modifierPool);
@@ -219,21 +219,12 @@ public class ModifierUtils {
 
         Tierify.LOGGER.info("Tier candidate pool for {} (reforge={}) -> {}", BuiltInRegistries.ITEM.getKey(item), reforge, potentialAttributes.stream().map(id -> id + "[pool=" + modifierPoolByTier.getOrDefault(id, 0) + "]").toList());
 
-        if (reforge && attributeWeights.size() > 2) {
-            sortByWeight(attributeWeights, potentialAttributes);
-            int maxWeight = attributeWeights.get(attributeWeights.size() - 1);
-            for (int i = 0; i < attributeWeights.size(); i++) {
-                if (attributeWeights.get(i) > maxWeight / 2) {
-                    attributeWeights.set(i, (int) (attributeWeights.get(i) * Tierify.CONFIG.reforgeModifier));
-                }
-            }
-        }
         // Luck
         if (playerEntity != null) {
             int luckMaxWeight = Collections.max(attributeWeights);
             for (int i = 0; i < attributeWeights.size(); i++) {
                 if (attributeWeights.get(i) > luckMaxWeight / 3) {
-                    attributeWeights.set(i, (int) (attributeWeights.get(i) * (1.0f - Tierify.CONFIG.luckReforgeModifier * playerEntity.getLuck())));
+                    attributeWeights.set(i, (int) (attributeWeights.get(i) * (1.0f - 0.02f * playerEntity.getLuck())));
                 }
             }
         }
@@ -280,145 +271,141 @@ public class ModifierUtils {
         return matchingAttributes;
     }
 
-/**
-     * Returns a random attribute ID from the attributes that contain any of the specified quality substrings in their identifier,
-     * considering the weights of the attributes.
-     *
-     * @param qualities A list of quality substrings to look for in the attribute identifiers (e.g., "mythic", "legendary").
-     * @param item      The item for which the attribute is being searched.
-     * 
-     * @return A random attribute ID that contains one of the specified quality substrings, considering attribute weights, or null if none are found.
-     */
-    public static Identifier getRandomAttributeForQuality(List<String> qualities, Item item, boolean reforge) {
-        List<Identifier> matchingAttributes = new ArrayList<>();
-        List<Integer> matchingAttributeWeights = new ArrayList<>();
-
-        // Collect all matching attributes for the given qualities and their weights
-        Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
-            if (attribute.isValid(BuiltInRegistries.ITEM.getKey(item)) && qualities.stream().anyMatch(quality -> id.toString().contains(quality.toLowerCase())) && (attribute.getWeight() > 0 || reforge)) {
-                matchingAttributes.add(id);
-                matchingAttributeWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
-            }
-        });
-
-        // Return null if no matching attributes are found
-        if (matchingAttributes.isEmpty()) {
-            return null;
-        }
-
-        // Calculate the total weight
-        int totalWeight = matchingAttributeWeights.stream().mapToInt(Integer::intValue).sum();
-        int randomIndex = new Random().nextInt(totalWeight);
-        
-        // Choose a random attribute based on weight
-        for (int i = 0; i < matchingAttributes.size(); i++) {
-            randomIndex -= matchingAttributeWeights.get(i);
-            if (randomIndex < 0) {
-                return matchingAttributes.get(i);
-            }
-        }
-
-        // Fallback, should not be reached due to the weight calculation
-        return null;
-    }
-
     public static void setItemStackAttribute(Identifier potentialAttributeID, ItemStack stack) {
         if (potentialAttributeID != null) {
             Tierify.LOGGER.info("Assigning tier {} to {}", potentialAttributeID, BuiltInRegistries.ITEM.getKey(stack.getItem()));
-            CompoundTag root = getCustomData(stack);
             PotentialAttribute assignedAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.parse(potentialAttributeID.toString()));
             if (assignedAttribute == null) {
                 Tierify.LOGGER.warn("Tier {} has no attribute template while assigning to {}", potentialAttributeID, BuiltInRegistries.ITEM.getKey(stack.getItem()));
                 return;
             }
 
-            CompoundTag tiered = new CompoundTag();
-            tiered.putString(Tierify.NBT_SUBTAG_DATA_KEY, potentialAttributeID.toString());
-            root.put(Tierify.NBT_SUBTAG_KEY, tiered);
-            root.putBoolean(Tierify.NBT_SUBTAG_MARKER_KEY, true);
-
-            CompoundTag colors = new CompoundTag();
-            colors.putString("top", ItemBordersCompat.getColorForIdentifier(potentialAttributeID));
-            colors.putString("bottom", ItemBordersCompat.getColorForIdentifier(potentialAttributeID));
-            root.put("itemborders_colors", colors);
-
-            HashMap<String, Object> nbtMap = assignedAttribute.getNbtValues();
-            Tierify.LOGGER.info("Attribute json for {} -> {}", potentialAttributeID, nbtMap);
-
-            // add durability nbt
-            List<AttributeTemplate> attributeList = assignedAttribute.getAttributes();
-            for (int i = 0; i < attributeList.size(); i++) {
-                String attributeTypeId = attributeList.get(i).getAttributeTypeID();
-                if ("tiered:generic.durable".equals(attributeTypeId)) {
-                    if (nbtMap == null) {
-                        nbtMap = new HashMap<>();
-                    }
-                    nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().amount() * 100.0) / 100.0);
-                    break;
-                }
-            }
-
-            // add nbtMap
-            if (nbtMap != null) {
-                for (HashMap.Entry<String, Object> entry : nbtMap.entrySet()) {
-                    String key = entry.getKey();
-                    Object value = entry.getValue();
-
-                    // json list will get read as ArrayList class
-                    // json map will get read as linkedtreemap
-                    // json integer is read by gson -> always double
-                    if (value instanceof String) {
-                        root.putString(key, (String) value);
-                    } else if (value instanceof Boolean) {
-                        root.putBoolean(key, (boolean) value);
-                    } else if (value instanceof Double) {
-                        if (Math.abs((double) value) % 1.0 < 0.0001D) {
-                            root.putInt(key, (int) Math.round((double) value));
-                        } else {
-                            root.putDouble(key, Math.round((double) value * 100.0) / 100.0);
-                        }
-                    }
-                }
-            }
-
-            setCustomData(stack, root);
+            setTier(stack, potentialAttributeID);
             int modifierPoolSize = countUsableModifierTemplates(stack.getItem(), assignedAttribute);
-            int appliedCount = rebuildAttributeModifiersComponent(stack);
+            int appliedCount = applyTierAttributes(stack);
             Tierify.LOGGER.info("[TierifyDebug][ModifierAssign] item={} tierSelected={} modifierPoolFound={} modifiersAppliedCount={}", BuiltInRegistries.ITEM.getKey(stack.getItem()), potentialAttributeID, modifierPoolSize, appliedCount);
             if (appliedCount == 0) {
                 Tierify.LOGGER.warn("No modifiers applied for item={} tier={} despite assignment; reason=pool_empty_or_slot_mismatch_or_invalid_attribute_type", BuiltInRegistries.ITEM.getKey(stack.getItem()), potentialAttributeID);
             }
-            Tierify.LOGGER.info("[TierifyDebug][Create] item={} tier={} attributes={}", BuiltInRegistries.ITEM.getKey(stack.getItem()), potentialAttributeID, attributeList);
+            Tierify.LOGGER.info("[TierifyDebug][Create] item={} tier={} attributes={}", BuiltInRegistries.ITEM.getKey(stack.getItem()), potentialAttributeID, assignedAttribute.getAttributes());
         } else {
             Tierify.LOGGER.warn("Tier assignment skipped for {} because no valid tier was selected", BuiltInRegistries.ITEM.getKey(stack.getItem()));
         }
     }
 
+    private static void clearTierNbtKeys(CompoundTag root, @Nullable Identifier tierId) {
+        if (tierId == null) {
+            return;
+        }
 
-    public static void setItemStackAttribute(@Nullable Player playerEntity, ItemStack stack, boolean reforge, ItemStack reforgeMaterial) {
-        if (reforge && reforgeMaterial != null) {
-            List<String> qualities = null;
+        PotentialAttribute previous = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tierId);
+        if (previous == null) {
+            return;
+        }
 
-            if (reforgeMaterial.is(TieredItemTags.TIER_1_ITEM)) {
-                qualities = Tierify.CONFIG.tier_1_qualities;
-            } else if (reforgeMaterial.is(TieredItemTags.TIER_2_ITEM)) {
-                qualities = Tierify.CONFIG.tier_2_qualities;
-            } else if (reforgeMaterial.is(TieredItemTags.TIER_3_ITEM)) {
-                qualities = Tierify.CONFIG.tier_3_qualities;
-            }
-
-            if (qualities != null) {
-                Identifier possibleAttribute = getRandomAttributeForQuality(qualities, stack.getItem(), reforge);
-                if (possibleAttribute != null) {
-                    Tierify.LOGGER.info("Reforge material {} produced tier {} for {}", BuiltInRegistries.ITEM.getKey(reforgeMaterial.getItem()), possibleAttribute, BuiltInRegistries.ITEM.getKey(stack.getItem()));
-                    setItemStackAttribute(possibleAttribute, stack);
-                    return;
+        HashMap<String, Object> nbtMap = previous.getNbtValues();
+        if (nbtMap != null) {
+            for (String key : nbtMap.keySet()) {
+                if (!"Damage".equals(key)) {
+                    root.remove(key);
                 }
             }
         }
 
-        setItemStackAttribute(playerEntity, stack, reforge);
+        for (AttributeTemplate template : previous.getAttributes()) {
+            if (template == null) {
+                continue;
+            }
+            if ("tiered:generic.durable".equals(template.getAttributeTypeID())) {
+                root.remove("durable");
+                break;
+            }
+        }
     }
+
+    private static void applyTierNbtValues(CompoundTag root, PotentialAttribute assignedAttribute, Identifier tierId) {
+        HashMap<String, Object> nbtMap = assignedAttribute.getNbtValues();
+        Tierify.LOGGER.info("Attribute json for {} -> {}", tierId, nbtMap);
+
+        List<AttributeTemplate> attributeList = assignedAttribute.getAttributes();
+        for (int i = 0; i < attributeList.size(); i++) {
+            String attributeTypeId = attributeList.get(i).getAttributeTypeID();
+            if ("tiered:generic.durable".equals(attributeTypeId)) {
+                if (nbtMap == null) {
+                    nbtMap = new HashMap<>();
+                }
+                nbtMap.put("durable", (double) Math.round(attributeList.get(i).getEntityAttributeModifier().amount() * 100.0) / 100.0);
+                break;
+            }
+        }
+
+        if (nbtMap == null) {
+            return;
+        }
+
+        for (HashMap.Entry<String, Object> entry : nbtMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (value instanceof String) {
+                root.putString(key, (String) value);
+            } else if (value instanceof Boolean) {
+                root.putBoolean(key, (boolean) value);
+            } else if (value instanceof Double) {
+                if (Math.abs((double) value) % 1.0 < 0.0001D) {
+                    root.putInt(key, (int) Math.round((double) value));
+                } else {
+                    root.putDouble(key, Math.round((double) value * 100.0) / 100.0);
+                }
+            }
+        }
+    }
+
+    public static void setTier(ItemStack stack, Identifier tierId) {
+        if (stack == null || stack.isEmpty() || tierId == null) {
+            return;
+        }
+
+        CompoundTag root = getCustomData(stack);
+        Identifier previousTier = getAttributeID(stack);
+        clearTierNbtKeys(root, previousTier);
+
+        CompoundTag tiered = new CompoundTag();
+        tiered.putString(Tierify.NBT_SUBTAG_DATA_KEY, tierId.toString());
+        root.put(Tierify.NBT_SUBTAG_KEY, tiered);
+        root.putBoolean(Tierify.NBT_SUBTAG_MARKER_KEY, true);
+
+        CompoundTag colors = new CompoundTag();
+        colors.putString("top", ItemBordersCompat.getColorForIdentifier(tierId));
+        colors.putString("bottom", ItemBordersCompat.getColorForIdentifier(tierId));
+        root.put("itemborders_colors", colors);
+
+        setCustomData(stack, root);
+    }
+
+    public static int applyTierAttributes(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
+
+        Identifier tierId = getAttributeID(stack);
+        if (tierId == null) {
+            return rebuildAttributeModifiersComponent(stack);
+        }
+
+        PotentialAttribute assignedAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tierId);
+        if (assignedAttribute == null) {
+            Tierify.LOGGER.warn("Tier {} has no attribute template while applying attributes to {}", tierId, BuiltInRegistries.ITEM.getKey(stack.getItem()));
+            return rebuildAttributeModifiersComponent(stack);
+        }
+
+        CompoundTag root = getCustomData(stack);
+        clearTierNbtKeys(root, tierId);
+        applyTierNbtValues(root, assignedAttribute, tierId);
+        setCustomData(stack, root);
+        return rebuildAttributeModifiersComponent(stack);
+    }
+
 
     public static void setItemStackAttribute(@Nullable Player playerEntity, ItemStack stack, boolean reforge) {
         CompoundTag customData = getCustomData(stack);

@@ -5,11 +5,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.world.item.Item;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,9 +16,6 @@ import draylar.tiered.api.BorderTemplate;
 import draylar.tiered.api.PotentialAttribute;
 import elocindev.tierify.data.AttributeDataLoader;
 import elocindev.tierify.data.TooltipBorderLoader;
-import elocindev.tierify.network.TieredClientPacket;
-import elocindev.tierify.screen.ReforgeScreenHandler;
-import elocindev.tierify.screen.client.ReforgeScreen;
 
 @Environment(EnvType.CLIENT)
 public class TierifyClient implements ClientModInitializer {
@@ -34,9 +28,6 @@ public class TierifyClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         registerAttributeSyncHandler();
-        registerReforgeItemSyncHandler();
-        MenuScreens.<ReforgeScreenHandler, ReforgeScreen>register(Tierify.REFORGE_SCREEN_HANDLER_TYPE, ReforgeScreen::new);
-        TieredClientPacket.init();
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new TooltipBorderLoader());
     }
 
@@ -51,18 +42,4 @@ public class TierifyClient implements ClientModInitializer {
         });
     }
 
-    public static void registerReforgeItemSyncHandler() {
-        ClientPlayNetworking.registerGlobalReceiver(Tierify.REFORGE_ITEM_SYNC_PAYLOAD_ID, (payload, context) -> {
-            context.client().execute(() -> {
-                Tierify.REFORGE_DATA_LOADER.clearReforgeBaseItems();
-                payload.reforgeItems().forEach((targetItem, baseItemIds) -> {
-                    List<Item> items = new ArrayList<>();
-                    for (Identifier id : baseItemIds) {
-                        BuiltInRegistries.ITEM.get(id).ifPresent(holder -> items.add(holder.value()));
-                    }
-                    Tierify.REFORGE_DATA_LOADER.putReforgeBaseItems(targetItem, items);
-                });
-            });
-        });
-    }
 }
