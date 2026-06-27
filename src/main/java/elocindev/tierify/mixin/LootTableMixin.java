@@ -23,7 +23,7 @@ public class LootTableMixin {
 
         return stack -> {
             if (!stack.isEmpty() && !context.getLevel().isClientSide()) {
-                ModifierUtils.applyTierToItem(stack);
+                ModifierUtils.applyTierIfNeeded(stack);
                 ModifierUtils.logTierDebug("loot_generation", stack);
             }
             originalConsumer.accept(stack);

@@ -33,7 +33,7 @@ public class MobEntityMixin {
                 if (itemStack.isEmpty()) {
                     continue;
                 }
-                ModifierUtils.setItemStackAttribute(null, itemStack, false);
+                ModifierUtils.applyTierIfNeeded(itemStack);
             }
         }
     }
@@ -56,7 +56,7 @@ public class MobEntityMixin {
         Mob mob = (Mob) (Object) this;
         AABB searchBox = mob.getBoundingBox().inflate(2.0D);
         for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, searchBox, dropped -> !dropped.getItem().isEmpty())) {
-            ModifierUtils.applyTierToItem(itemEntity.getItem());
+            ModifierUtils.applyTierIfNeeded(itemEntity.getItem());
             ModifierUtils.logTierDebug("mob_drops", itemEntity.getItem());
         }
     }

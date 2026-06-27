@@ -33,11 +33,13 @@ import org.jetbrains.annotations.Nullable;
 import elocindev.tierify.Tierify;
 import elocindev.tierify.compat.ItemBordersCompat;
 
+@SuppressWarnings({"null", "deprecation"})
 public class ModifierUtils {
 
     private static final String GENERATED_ATTRIBUTES_KEY = "TieredGeneratedAttributes";
     private static final String GENERATED_COUNT_KEY = "count";
     private static final String ENTRY_PREFIX = "entry_";
+    private static final String MOVEMENT_SPEED_ATTRIBUTE_ID = "minecraft:movement_speed";
 
     private static final class GeneratedAttributeRoll {
         private final String attributeTypeId;
@@ -125,10 +127,25 @@ public class ModifierUtils {
     }
 
     public static void applyTierToItem(ItemStack stack) {
+        applyTierIfNeeded(stack);
+    }
+
+    public static void applyTierIfNeeded(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return;
         }
-        setItemStackAttribute(null, stack, false);
+
+        Identifier existingTier = getAttributeID(stack);
+        if (existingTier != null && Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().containsKey(existingTier)) {
+            return;
+        }
+
+        Identifier generatedTier = getRandomAttributeIDFor(null, stack.getItem(), false);
+        if (generatedTier == null) {
+            return;
+        }
+
+        setItemStackAttribute(generatedTier, stack);
     }
 
     public static void logTierDebug(String source, ItemStack stack) {
@@ -559,6 +576,19 @@ public class ModifierUtils {
         return mastery;
     }
 
+    private static double applyMovementSpeedDiminishingReturns(String attributeTypeId,
+                                                               double amount,
+                                                               Map<String, Integer> diminishingCounters) {
+        if (!MOVEMENT_SPEED_ATTRIBUTE_ID.equals(attributeTypeId)) {
+            return amount;
+        }
+
+        int stackIndex = diminishingCounters.getOrDefault(MOVEMENT_SPEED_ATTRIBUTE_ID, 0) + 1;
+        diminishingCounters.put(MOVEMENT_SPEED_ATTRIBUTE_ID, stackIndex);
+        double multiplier = Math.pow(0.5D, stackIndex - 1);
+        return amount * multiplier;
+    }
+
     private static double resolveDurableAmount(List<GeneratedAttributeRoll> generatedRolls, PotentialAttribute assignedAttribute) {
         if (generatedRolls != null) {
             for (GeneratedAttributeRoll roll : generatedRolls) {
@@ -704,8 +734,10 @@ public class ModifierUtils {
         }
     }
 
-    private static void clearTierNbtKeys(CompoundTag root, @Nullable Identifier tierId) {
-        root.remove(GENERATED_ATTRIBUTES_KEY);
+    private static void clearTierNbtKeys(CompoundTag root, @Nullable Identifier tierId, boolean clearGeneratedRolls) {
+        if (clearGeneratedRolls) {
+            root.remove(GENERATED_ATTRIBUTES_KEY);
+        }
         if (tierId == null) {
             return;
         }
@@ -779,7 +811,7 @@ public class ModifierUtils {
 
         CompoundTag root = getCustomData(stack);
         Identifier previousTier = getAttributeID(stack);
-        clearTierNbtKeys(root, previousTier);
+        clearTierNbtKeys(root, previousTier, true);
 
         CompoundTag tiered = new CompoundTag();
         tiered.putString(Tierify.NBT_SUBTAG_DATA_KEY, tierId.toString());
@@ -811,7 +843,7 @@ public class ModifierUtils {
         }
 
         CompoundTag root = getCustomData(stack);
-        clearTierNbtKeys(root, tierId);
+        clearTierNbtKeys(root, tierId, false);
 
         List<GeneratedAttributeRoll> generatedRolls = readGeneratedRollsFromNbt(root);
         if (generatedRolls.isEmpty()) {
@@ -924,6 +956,7 @@ public class ModifierUtils {
 
         CompoundTag root = getCustomData(itemStack);
         List<GeneratedAttributeRoll> generatedRolls = readGeneratedRollsFromNbt(root);
+        Map<String, Integer> diminishingCounters = new HashMap<>();
         if (!generatedRolls.isEmpty()) {
             int slotMismatchCount = 0;
             int missingAttributeTypeCount = 0;
@@ -957,8 +990,9 @@ public class ModifierUtils {
                 Identifier modifierId = Identifier.fromNamespaceAndPath(baseModifierId.getNamespace(), baseModifierId.getPath() + "_" + slot.getName());
                 double amount = roll.amount;
                 if (masteryMultiplier != 0.0D && !isMasteryAttributeType(roll.attributeTypeId)) {
-                    amount = amount * (1.0D + masteryMultiplier);
+                    amount = amount + masteryMultiplier;
                 }
+                amount = applyMovementSpeedDiminishingReturns(roll.attributeTypeId, amount, diminishingCounters);
                 AttributeModifier cloneModifier = new AttributeModifier(modifierId, amount, roll.operation);
                 var key = BuiltInRegistries.ATTRIBUTE.get(Identifier.parse(roll.attributeTypeId));
                 if (key.isEmpty()) {
@@ -1007,7 +1041,18 @@ public class ModifierUtils {
                 continue;
             }
 
-            template.realize(modifiers, slot);
+            AttributeModifier baseModifier = template.getEntityAttributeModifier();
+            Identifier baseModifierId = baseModifier.id();
+            Identifier modifierId = Identifier.fromNamespaceAndPath(baseModifierId.getNamespace(), baseModifierId.getPath() + "_" + slot.getName());
+            double amount = applyMovementSpeedDiminishingReturns(template.getAttributeTypeID(), baseModifier.amount(), diminishingCounters);
+            AttributeModifier cloneModifier = new AttributeModifier(modifierId, amount, baseModifier.operation());
+
+            var key = BuiltInRegistries.ATTRIBUTE.get(Identifier.parse(template.getAttributeTypeID()));
+            if (key.isPresent()) {
+                modifiers.put(key.get(), cloneModifier);
+            } else {
+                missingAttributeTypeCount++;
+            }
         }
 
         Tierify.LOGGER.info("Generated modifiers for {} in {} -> {} (appliedCount={}, malformed={}, slotMismatch={}, missingAttributeType={})",

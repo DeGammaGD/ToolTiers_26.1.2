@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.util.Locale;
 import net.minecraft.world.entity.EquipmentSlot;
 
+@SuppressWarnings({"null"})
 public class EquipmentSlotDeserializer implements JsonDeserializer<EquipmentSlot> {
 
     @Override

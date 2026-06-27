@@ -10,6 +10,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import elocindev.tierify.Tierify;
 
+@SuppressWarnings({"null"})
 public class ItemVerifier {
 
     private final String id;

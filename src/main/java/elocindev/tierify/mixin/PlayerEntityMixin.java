@@ -1,42 +1,56 @@
 package elocindev.tierify.mixin;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Slice;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import draylar.tiered.api.CustomEntityAttributes;
 import elocindev.tierify.util.AttributeHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Player.class)
-public abstract class PlayerEntityMixin extends LivingEntity {
+public class PlayerEntityMixin {
 
-    private PlayerEntityMixin(EntityType<? extends LivingEntity> type, Level world) {
-        super(type, world);
+    /**
+     * Registers all ToolTiers custom attributes onto the player's attribute map.
+     * Without this, player.getAttribute(CRITICAL_CHANCE/CRITICAL_DAMAGE/...) returns null
+     * and no weapon modifiers are ever applied to the player's live attribute instances.
+     */
+    @Inject(method = "createAttributes", at = @At("RETURN"))
+    private static void tierify$addCustomAttributes(CallbackInfoReturnable<AttributeSupplier.Builder> info) {
+        AttributeSupplier.Builder builder = info.getReturnValue();
+        builder.add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(CustomEntityAttributes.CRITICAL_CHANCE));
+        builder.add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(CustomEntityAttributes.LEGACY_CRIT_CHANCE));
+        builder.add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(CustomEntityAttributes.CRITICAL_DAMAGE));
+        builder.add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(CustomEntityAttributes.HASTE));
+        builder.add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(CustomEntityAttributes.LEGACY_DIG_SPEED));
+        builder.add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(CustomEntityAttributes.RANGED_ATTACK_DAMAGE));
+        builder.add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(CustomEntityAttributes.LEGACY_RANGE_ATTACK_DAMAGE));
     }
 
-    @Inject(method = { "createAttributes", "createPlayerAttributes" }, at = @At("RETURN"), require = 0)
-    private static void createPlayerAttributesMixin(CallbackInfoReturnable<AttributeSupplier.Builder> info) {
-        for (var attribute : CustomEntityAttributes.PLAYER_ATTRIBUTES) {
-            info.getReturnValue().add(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(attribute));
-        }
+    /**
+     * Overrides whether the melee hit is a critical hit.
+     *
+     * <p>Targets the {@code canCriticalAttack(Entity)} call inside {@code attack(Entity)} instead of the
+     * {@code criticalAttack} local variable. The previous {@code @ModifyVariable} relied on local-variable-table
+     * analysis, which is unreliable when the mixin class version (Java 25) is higher than the declared mixin
+     * {@code compatibilityLevel}. This INVOKE-based hook is LVT-independent and fires exactly when vanilla evaluates
+     * the crit condition (i.e. only at full attack strength), preserving vanilla jump-crits.
+     */
+    @ModifyExpressionValue(
+            method = "attack(Lnet/minecraft/world/entity/Entity;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;canCriticalAttack(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean tierify$applyCritChance(boolean vanillaCriticalAttack) {
+        return vanillaCriticalAttack || AttributeHelper.shouldMeleeCrit((Player) (Object) this);
     }
 
-    @ModifyVariable(method = "getDestroySpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/effect/MobEffectUtil;hasDigSpeed(Lnet/minecraft/world/entity/LivingEntity;)Z"), index = 2, require = 0)
-    private float getBlockBreakingSpeedMixin(float f) {
-        return AttributeHelper.getExtraDigSpeed((Player) (Object) this, f);
-    }
-
-    @ModifyVariable(method = "attack", at = @At(value = "JUMP", ordinal = 2), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;isSprinting()Z", ordinal = 1)), index = 8, require = 0)
-    private boolean attackMixin(boolean bl3) {
-        return bl3 || AttributeHelper.shouldMeeleCrit((Player) (Object) this);
+    @ModifyConstant(method = "attack(Lnet/minecraft/world/entity/Entity;)V", constant = @Constant(floatValue = 1.5F))
+    private float tierify$modifyCriticalMultiplier(float vanillaCriticalMultiplier) {
+        return vanillaCriticalMultiplier + AttributeHelper.getCriticalDamageModifier((Player) (Object) this);
     }
 }

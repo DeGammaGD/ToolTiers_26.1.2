@@ -15,7 +15,7 @@
                            "type":  "tiered:generic.critical_chance",
                            "modifier":  {
                                             "name":  "tiered:rare_melee_weapons_critical_chance",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  0.2
                                         },
                            "optional_equipment_slots":  [

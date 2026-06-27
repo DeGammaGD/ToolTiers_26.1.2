@@ -19,9 +19,10 @@ public abstract class ItemStackMixin {
         if (component != null) {
             CompoundTag root = component.copyTag();
             if (root.contains("durable")) {
-                int flat = root.getInt("durable").orElse(0);
-                float scaled = root.getFloat("durable").orElse(0.0f);
-                info.setReturnValue(info.getReturnValue() + (flat > 0 ? flat : (int) (scaled * info.getReturnValue())));
+                double modifier = root.getDouble("durable").orElse(0.0D);
+                int baseDurability = info.getReturnValue();
+                int effectiveDurability = (int) Math.round(baseDurability * (1.0D + modifier));
+                info.setReturnValue(Math.max(1, effectiveDurability));
             }
         }
     }

@@ -129,6 +129,15 @@ public class BorderTemplate {
         String namespace = idLike.substring(0, namespaceSplit);
         String path = idLike.substring(namespaceSplit + 1);
 
+        // Canonical ids use category/quality, e.g. tiered:armor/common.
+        int canonicalSplit = path.indexOf('/');
+        if (canonicalSplit > 0 && canonicalSplit < path.length() - 1) {
+            String quality = path.substring(canonicalSplit + 1);
+            if (!quality.isEmpty()) {
+                return namespace + ":" + quality;
+            }
+        }
+
         int qualitySplit = path.indexOf('_');
         if (qualitySplit <= 0) {
             return null;

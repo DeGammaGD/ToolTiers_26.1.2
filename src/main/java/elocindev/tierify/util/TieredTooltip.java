@@ -15,6 +15,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 
 @Environment(EnvType.CLIENT)
+@SuppressWarnings({"null"})
 public class TieredTooltip {
 
     public static String getPlateForModifier(String modifier) {

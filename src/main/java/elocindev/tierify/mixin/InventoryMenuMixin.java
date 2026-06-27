@@ -37,7 +37,7 @@ public class InventoryMenuMixin {
         String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
         boolean hadTierBefore = ModifierUtils.hasTier(stack);
         Tierify.LOGGER.info("[CraftDebug] InventoryMenu.quickMoveStack pre-transfer item={} count={} hadTierBefore={}", itemId, stack.getCount(), hadTierBefore);
-        ModifierUtils.applyTierToItem(stack);
+        ModifierUtils.applyTierIfNeeded(stack);
         boolean hasTierAfter = ModifierUtils.hasTier(stack);
         Tierify.LOGGER.info("[CraftDebug] InventoryMenu.quickMoveStack post-assign item={} hasTierAfter={} generated={}", itemId, hasTierAfter, !hadTierBefore && hasTierAfter);
         ModifierUtils.logTierDebug("crafting-shift", stack);

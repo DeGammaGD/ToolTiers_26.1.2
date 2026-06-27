@@ -4,6 +4,7 @@ import draylar.tiered.api.ModifierUtils;
 import elocindev.tierify.Tierify;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.entity.player.Player;
@@ -15,6 +16,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(AnvilMenu.class)
+@SuppressWarnings({"null"})
 public abstract class AnvilScreenHandlerMixin {
 
     @Shadow
@@ -63,6 +66,22 @@ public abstract class AnvilScreenHandlerMixin {
     @Inject(method = "onTake", at = @At("HEAD"))
     private void tierify$applyAnvilTierUpgradeOnTake(Player player, ItemStack resultStack, CallbackInfo info) {
         AnvilMenu menu = (AnvilMenu) (Object) this;
+        applyTierUpgradeResultIfNeeded(player, menu, resultStack);
+    }
+
+    @Inject(method = "quickMoveStack", at = @At("HEAD"), require = 0)
+    private void tierify$applyAnvilTierUpgradeOnShiftTake(Player player, int index, CallbackInfoReturnable<ItemStack> info) {
+        if (index != 2) {
+            return;
+        }
+
+        AnvilMenu menu = (AnvilMenu) (Object) this;
+        ItemStack resultStack = menu.getSlot(2).getItem();
+        applyTierUpgradeResultIfNeeded(player, menu, resultStack);
+    }
+
+    @Unique
+    private static void applyTierUpgradeResultIfNeeded(Player player, AnvilMenu menu, ItemStack resultStack) {
         ItemStack left = menu.getSlot(0).getItem();
         ItemStack right = menu.getSlot(1).getItem();
 
@@ -89,6 +108,16 @@ public abstract class AnvilScreenHandlerMixin {
 
         ModifierUtils.setTier(resultStack, targetTier);
         ModifierUtils.applyTierAttributes(resultStack);
+        ModifierUtils.rebuildAttributeModifiersComponent(resultStack);
+
+        menu.getSlot(2).set(resultStack);
+        menu.getSlot(2).setChanged();
+        player.getInventory().setChanged();
+        menu.broadcastChanges();
+        if (player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.containerMenu.broadcastChanges();
+            serverPlayer.inventoryMenu.broadcastChanges();
+        }
     }
 
     @Unique

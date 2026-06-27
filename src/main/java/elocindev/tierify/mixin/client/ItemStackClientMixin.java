@@ -29,9 +29,41 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Environment(EnvType.CLIENT)
 @Mixin(ItemStack.class)
+@SuppressWarnings({"null"})
 public abstract class ItemStackClientMixin {
 
     private static final Pattern PERCENT_NUMBER_PATTERN = Pattern.compile("([+-]?\\d+(?:\\.\\d+)?)%");
+    private static final Pattern PLAIN_NUMBER_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+)?)");
+
+    /**
+     * Converts the vanilla Critical Chance attribute line (rendered as a raw decimal, e.g. "+0.65")
+     * into a percentage ("+65%"). Display-only: the underlying modifier value is untouched. Lines that
+     * already contain a '%' (modifiers stored as a multiplied operation) are left for the percent rounder.
+     */
+    private static Component formatCriticalChanceComponent(Component component) {
+        String critName = Component.translatable("generic.critical_chance").getString();
+        String raw = component.getString();
+        if (critName.isEmpty() || !raw.contains(critName) || raw.indexOf('%') >= 0) {
+            return component;
+        }
+
+        Matcher matcher = PLAIN_NUMBER_PATTERN.matcher(raw);
+        if (!matcher.find()) {
+            return component;
+        }
+
+        String replacement;
+        try {
+            double value = Double.parseDouble(matcher.group(1)) * 100.0;
+            BigDecimal rounded = new BigDecimal(value).setScale(1, RoundingMode.HALF_UP).stripTrailingZeros();
+            replacement = rounded.toPlainString() + "%";
+        } catch (NumberFormatException ignored) {
+            return component;
+        }
+
+        String formatted = raw.substring(0, matcher.start(1)) + replacement + raw.substring(matcher.end(1));
+        return Component.literal(formatted).setStyle(component.getStyle());
+    }
 
     private static String formatPercentNumbers(String text) {
         Matcher matcher = PERCENT_NUMBER_PATTERN.matcher(text);
@@ -99,7 +131,8 @@ public abstract class ItemStackClientMixin {
     private void getTooltipMixin(Item.TooltipContext context, Player player, TooltipFlag type, CallbackInfoReturnable<List<Component>> info) {
         List<Component> tooltip = info.getReturnValue();
         for (int i = 0; i < tooltip.size(); i++) {
-            tooltip.set(i, formatTooltipComponent(tooltip.get(i)));
+            Component line = formatCriticalChanceComponent(tooltip.get(i));
+            tooltip.set(i, formatTooltipComponent(line));
         }
 
         CustomData component = ((ItemStack) (Object) this).get(DataComponents.CUSTOM_DATA);

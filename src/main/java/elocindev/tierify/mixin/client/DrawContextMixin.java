@@ -29,6 +29,7 @@ import net.minecraft.world.item.component.CustomData;
 
 @Environment(EnvType.CLIENT)
 @Mixin(GuiGraphicsExtractor.class)
+@SuppressWarnings({"null"})
 public class DrawContextMixin {
 
     @Inject(method = "setTooltipForNextFrame(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)

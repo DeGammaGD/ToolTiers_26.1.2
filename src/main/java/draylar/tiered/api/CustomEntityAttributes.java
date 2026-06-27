@@ -7,6 +7,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 
+@SuppressWarnings({"null"})
 public class CustomEntityAttributes {
 
     public static final String HASTE_ID = "tiered:generic.haste";
@@ -22,6 +23,8 @@ public class CustomEntityAttributes {
     public static final String FIRE_PROTECTION_ID = "tiered:generic.fire_protection";
     public static final String BLAST_PROTECTION_ID = "tiered:generic.blast_protection";
     public static final String PROJECTILE_PROTECTION_ID = "tiered:generic.projectile_protection";
+    public static final String POWER_ID = "tiered:generic.power";
+    public static final String QUICK_DRAW_ID = "tiered:generic.quick_draw";
 
     public static final Attribute HASTE = register("generic.haste", new RangedAttribute("generic.haste", 0.0D, 0.0D, 2048.0D).setSyncable(true));
     public static final Attribute LEGACY_DIG_SPEED = register("generic.dig_speed", new RangedAttribute("generic.dig_speed", 0.0D, 0.0D, 2048.0D).setSyncable(true));
@@ -52,6 +55,8 @@ public class CustomEntityAttributes {
     public static final Attribute HANDLING = register("generic.handling", new RangedAttribute("generic.handling", 0.0D, 0.0D, 1024.0D).setSyncable(true));
     public static final Attribute LUNGE = register("generic.lunge", new RangedAttribute("generic.lunge", 0.0D, 0.0D, 1024.0D).setSyncable(true));
     public static final Attribute CHARGE_DAMAGE = register("generic.charge_damage", new RangedAttribute("generic.charge_damage", 0.0D, 0.0D, 1024.0D).setSyncable(true));
+    public static final Attribute POWER = register("generic.power", new RangedAttribute("generic.power", 0.0D, 0.0D, 1024.0D).setSyncable(true));
+    public static final Attribute QUICK_DRAW = register("generic.quick_draw", new RangedAttribute("generic.quick_draw", 0.0D, 0.0D, 1024.0D).setSyncable(true));
 
     public static final Attribute[] PLAYER_ATTRIBUTES = new Attribute[] {
             HASTE,

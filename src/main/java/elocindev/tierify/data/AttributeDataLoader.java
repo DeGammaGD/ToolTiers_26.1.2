@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+@SuppressWarnings({"null", "deprecation"})
 public class AttributeDataLoader implements SimpleSynchronousResourceReloadListener {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping()
             .registerTypeAdapter(AttributeModifier.class, new EntityAttributeModifierDeserializer())

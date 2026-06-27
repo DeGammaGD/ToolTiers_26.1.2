@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 
+@SuppressWarnings({"null", "deprecation"})
 public class TooltipBorderLoader implements SimpleSynchronousResourceReloadListener {
 
     private static final Logger LOGGER = LogManager.getLogger("TieredZ");

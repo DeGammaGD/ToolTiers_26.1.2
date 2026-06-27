@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
+@SuppressWarnings({"null"})
 public class EntityAttributeModifierDeserializer implements JsonDeserializer<AttributeModifier> {
 
     private static final String JSON_NAME_KEY = "name";

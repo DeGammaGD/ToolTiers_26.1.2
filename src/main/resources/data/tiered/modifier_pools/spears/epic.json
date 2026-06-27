@@ -48,7 +48,7 @@
                            "type":  "tiered:generic.critical_chance",
                            "modifier":  {
                                             "name":  "tiered:epic_spears_critical_chance",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  0.3
                                         },
                            "optional_equipment_slots":  [

@@ -4,7 +4,6 @@ import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -37,11 +36,10 @@ import elocindev.tierify.command.CommandInit;
 import elocindev.tierify.config.ClientConfig;
 import elocindev.tierify.config.CommonConfig;
 import elocindev.tierify.data.AttributeDataLoader;
-import elocindev.tierify.registry.ItemRegistry;
 
 import java.util.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "null", "deprecation"})
 public class Tierify implements ModInitializer {
 
     public static CommonConfig CONFIG = new CommonConfig();
@@ -53,11 +51,6 @@ public class Tierify implements ModInitializer {
      * This field is registered to the server's data manager in {@link ServerResourceManagerMixin}
      */
     public static final AttributeDataLoader ATTRIBUTE_DATA_LOADER = new AttributeDataLoader();
-
-    // Same UUIDs as in ArmorItem
-    // public static final UUID[] MODIFIERS = new UUID[] { UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B6B"), UUID.fromString("D8499B04-0E66-4726-AB29-64469D734E0D"),
-    // UUID.fromString("9F3D476D-C118-4544-8365-64846904B48E"), UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150"), UUID.fromString("4a88bc27-9563-4eeb-96d5-fe50917cc24f"),
-    // UUID.fromString("fee48d8c-1b51-4c46-9f4b-c58162623a7a") };
 
     public static final UUID[] MODIFIERS = new UUID[] { UUID.fromString("baf8e074-f7f9-4549-ba1f-e21f82684b8c"), UUID.fromString("9b3416de-98d1-407f-bc6b-e673c2ab5252"),
             UUID.fromString("1e3ceca6-aa30-4165-9715-20bb63c11348"), UUID.fromString("c99bfa17-4886-4cbb-86c2-ebf9369616d5"), UUID.fromString("19e4dc8d-3892-4ffe-a558-f96c68491144"),
@@ -103,18 +96,12 @@ public class Tierify implements ModInitializer {
         CLIENT_CONFIG = AutoConfig.getConfigHolder(ClientConfig.class).getConfig();
 
         TieredItemTags.init();
-        ItemRegistry.init();
         CustomEntityAttributes.init();
         CommandInit.init();
         registerAttributeSyncer();
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(Tierify.ATTRIBUTE_DATA_LOADER);
 
         PayloadTypeRegistry.clientboundPlay().register(ATTRIBUTE_SYNC_PAYLOAD_ID, ATTRIBUTE_SYNC_PAYLOAD_CODEC);
-        
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            // TODO: Add config stuff for the plate in the tooltip
-            // setupModifierLabel();
-        }
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, serverResourceManager, success) -> {
             if (success) {
@@ -142,33 +129,6 @@ public class Tierify implements ModInitializer {
         return Identifier.fromNamespaceAndPath("tiered", path);
     }
 
-    /**
-     * Creates an {@link ItemTooltipCallback} listener that adds the modifier name at the top of an Item tooltip.
-     * <p>
-     * A tool name is only displayed if the item has a modifier.
-     */
-    private void setupModifierLabel() {
-        ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
-            CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-            CompoundTag root = customData != null ? customData.copyTag() : new CompoundTag();
-            // has tier
-            if (customData != null && root.contains(NBT_SUBTAG_KEY)) {
-                // get tier
-                CompoundTag tiered = root.getCompound(NBT_SUBTAG_KEY).orElse(null);
-                if (tiered == null) {
-                    return;
-                }
-                Identifier tier = Identifier.parse(tiered.getString(Tierify.NBT_SUBTAG_DATA_KEY).orElse(""));
-
-                // attempt to display attribute if it is valid
-                PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
-
-                if (potentialAttribute != null)
-                    lines.add(1, Component.translatable(potentialAttribute.getID() + ".label").setStyle(potentialAttribute.getStyle()));
-            }
-        });
-    }
-
     public static boolean isPreferredEquipmentSlot(ItemStack stack, EquipmentSlot slot) {
         Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
         if (equippable != null) {
@@ -193,39 +153,19 @@ public class Tierify implements ModInitializer {
     public static void updateItemStackNbt(Inventory playerInventory) {
         for (int u = 0; u < playerInventory.getContainerSize(); u++) {
             ItemStack itemStack = playerInventory.getItem(u);
-            CustomData customData = itemStack.get(DataComponents.CUSTOM_DATA);
-            CompoundTag root = customData != null ? customData.copyTag() : new CompoundTag();
-            if (!itemStack.isEmpty() && customData != null && root.contains(Tierify.NBT_SUBTAG_KEY)) {
+            if (itemStack.isEmpty()) {
+                continue;
+            }
 
-                // Check if attribute exists
-                List<String> attributeIds = new ArrayList<>();
-                Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
-                    if (attribute.isValid(BuiltInRegistries.ITEM.getKey(itemStack.getItem()))) {
-                        attributeIds.add(attribute.getID());
-                    }
+            ModifierUtils.applyTierIfNeeded(itemStack);
 
-                });
-                Identifier attributeID = null;
-                for (int i = 0; i < attributeIds.size(); i++) {
-                    String tieredText = root.getCompound(Tierify.NBT_SUBTAG_KEY).map(CompoundTag::toString).orElse("");
-                    if (tieredText.contains(attributeIds.get(i))) {
-                        attributeID = Identifier.parse(attributeIds.get(i));
-                        break;
-                    } else if (i == attributeIds.size() - 1) {
-                        ModifierUtils.removeItemStackAttribute(itemStack);
-                        attributeID = ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false);
-                    }
+            Identifier tierId = ModifierUtils.getAttributeID(itemStack);
+            if (tierId != null) {
+                int appliedCount = ModifierUtils.applyTierAttributes(itemStack);
+                if (appliedCount == 0) {
+                    LOGGER.warn("updateItemStackNbt kept tier {} on {} but generated zero modifiers", tierId, BuiltInRegistries.ITEM.getKey(itemStack.getItem()));
                 }
-
-                // found an ID
-                if (attributeID != null) {
-                    ModifierUtils.setTier(itemStack, attributeID);
-                    int appliedCount = ModifierUtils.applyTierAttributes(itemStack);
-                    if (appliedCount == 0) {
-                        LOGGER.warn("updateItemStackNbt kept tier {} on {} but generated zero modifiers", attributeID, BuiltInRegistries.ITEM.getKey(itemStack.getItem()));
-                    }
-                    playerInventory.setItem(u, itemStack);
-                }
+                playerInventory.setItem(u, itemStack);
             }
         }
     }

@@ -37,7 +37,7 @@
                            "type":  "tiered:generic.critical_chance",
                            "modifier":  {
                                             "name":  "tiered:uncommon_maces_critical_chance",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  0.12
                                         },
                            "optional_equipment_slots":  [

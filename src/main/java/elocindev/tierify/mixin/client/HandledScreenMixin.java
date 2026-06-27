@@ -33,6 +33,7 @@ import draylar.tiered.api.BorderTemplate;
 
 @Environment(EnvType.CLIENT)
 @Mixin(AbstractContainerScreen.class)
+@SuppressWarnings({"null"})
 public abstract class HandledScreenMixin extends Screen {
 
     @Shadow protected Slot hoveredSlot;

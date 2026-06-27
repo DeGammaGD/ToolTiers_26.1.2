@@ -18,6 +18,7 @@ import elocindev.tierify.data.AttributeDataLoader;
 import elocindev.tierify.data.TooltipBorderLoader;
 
 @Environment(EnvType.CLIENT)
+@SuppressWarnings({"null", "deprecation"})
 public class TierifyClient implements ClientModInitializer {
 
     // map for storing attributes before logging into a server

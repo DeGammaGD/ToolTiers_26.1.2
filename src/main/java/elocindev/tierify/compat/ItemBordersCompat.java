@@ -8,6 +8,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
+@SuppressWarnings({"null"})
 public class ItemBordersCompat {
     
     public static void addBorder(ItemStack stack, String color) {

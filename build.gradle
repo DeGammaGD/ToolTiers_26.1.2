@@ -59,25 +59,6 @@ java {
 	targetCompatibility = JavaVersion.VERSION_25
 }
 
-sourceSets {
-	main {
-		java {
-			// Legacy migration mixins are kept in-tree for reference, but excluded from compilation
-			// so they do not produce annotation-processor warnings on the Mojmap 1.21.1 baseline.
-			exclude "elocindev/tierify/mixin/ArmorItemMixin.java"
-			exclude "elocindev/tierify/mixin/ArmorStandEntityMixin.java"
-			exclude "elocindev/tierify/mixin/ArrowEntityMixin.java"
-			exclude "elocindev/tierify/mixin/BowItemMixin.java"
-			exclude "elocindev/tierify/mixin/CrossbowItemMixin.java"
-			exclude "elocindev/tierify/mixin/LivingEntityMixin.java"
-			exclude "elocindev/tierify/mixin/MerchantScreenHandlerMixin.java"
-			exclude "elocindev/tierify/mixin/PlayerEntityMixin.java"
-			exclude "elocindev/tierify/mixin/SpectralArrowEntityMixin.java"
-			exclude "elocindev/tierify/mixin/TridentEntityMixin.java"
-		}
-	}
-}
-
 jar {
 	from("LICENSE") {
 		rename { "${it}_${base.archivesName.get()}"}

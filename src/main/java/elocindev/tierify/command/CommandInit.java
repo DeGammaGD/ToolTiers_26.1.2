@@ -20,6 +20,7 @@ import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
+@SuppressWarnings({"null"})
 public class CommandInit {
 
     private static final List<String> TIER_LIST = List.of("common", "uncommon", "rare", "epic", "legendary", "mythic");

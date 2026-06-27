@@ -4,7 +4,6 @@ import com.google.common.collect.Multimap;
 import com.google.gson.annotations.SerializedName;
 
 import elocindev.tierify.Tierify;
-import java.util.Optional;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -21,6 +20,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  *
  * The EquipmentSlot is used to only apply this template to certain items.
  */
+@SuppressWarnings({"null"})
 public class AttributeTemplate {
 
     @SerializedName("type")

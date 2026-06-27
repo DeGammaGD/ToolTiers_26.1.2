@@ -1,17 +1,24 @@
 {
   "required": true,
   "package": "elocindev.tierify.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ItemStackMixin",
     "ItemMixin",
     "ResultSlotMixin",
     "CraftingMenuMixin",
+    "InventoryMixin",
     "InventoryMenuMixin",
     "ItemFrameEntityMixin",
+    "PlayerEntityMixin",
     "AnvilScreenHandlerMixin",
     "LootTableMixin",
-    "MobEntityMixin"
+    "MobEntityMixin",
+    "EnchantmentHelperMixin",
+    "BowItemMixin",
+    "FireworkRocketEntityMixin",
+    "LivingEntityElytraMixin",
+    "ApplyEntityImpulseMixin"
   ],
   "client": [
     "client.ItemStackClientMixin",
