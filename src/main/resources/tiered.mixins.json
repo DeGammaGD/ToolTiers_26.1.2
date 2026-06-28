@@ -15,13 +15,15 @@
     "LootTableMixin",
     "MobEntityMixin",
     "EnchantmentHelperMixin",
+    "TridentItemMixin",
     "BowItemMixin",
     "FireworkRocketEntityMixin",
-    "LivingEntityElytraMixin",
+    "LivingEntityProtectionMixin",
     "ApplyEntityImpulseMixin"
   ],
   "client": [
     "client.ItemStackClientMixin",
+    "client.BowUseDurationMixin",
     "client.DrawContextMixin",
     "client.HandledScreenMixin"
   ],

@@ -13,9 +13,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**
- * Makes the {@code tiered:generic.quick_draw} attribute behave like Quick Charge on bows: the bow draws faster,
- * gaining 5 effective charge ticks (the 0.25s/level Quick Charge grants on crossbows) per level. Implemented by
- * recomputing {@link BowItem#getPowerForTime(int)} with the boosted charge time at release.
+ * Makes the {@code tiered:generic.quick_draw} attribute speed up bow drawing as a percentage of the charge time:
+ * {@code effectiveChargeTime = baseChargeTime * (1 - quick_draw)}. Because the bow's power is derived from how long
+ * it has been charging via {@link BowItem#getPowerForTime(int)}, we divide the elapsed charge ticks by
+ * {@code (1 - quick_draw)} so full power is reached in the shortened time. The factor is clamped to a 5% floor.
  */
 @Mixin(BowItem.class)
 public class BowItemMixin {
@@ -27,8 +28,12 @@ public class BowItemMixin {
             return originalPower;
         }
 
-        int bonusTicks = (int) Math.round(5.0D * quickDraw);
-        int charge = ((BowItem) (Object) this).getUseDuration(stack, entity) - timeLeft + bonusTicks;
+        double factor = 1.0D - quickDraw;
+        if (factor < 0.05D) {
+            factor = 0.05D;
+        }
+        int elapsed = ((BowItem) (Object) this).getUseDuration(stack, entity) - timeLeft;
+        int charge = (int) Math.round(elapsed / factor);
         return BowItem.getPowerForTime(charge);
     }
 }

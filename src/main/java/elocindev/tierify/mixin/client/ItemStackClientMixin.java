@@ -88,12 +88,19 @@ public abstract class ItemStackClientMixin {
 
     private static Component formatTooltipComponent(Component component) {
         String raw = component.getString();
+
         if (raw.indexOf('%') < 0) {
+            if (!raw.equals(component.getString())) {
+                return Component.literal(raw).setStyle(component.getStyle());
+            }
             return component;
         }
 
         String formatted = formatPercentNumbers(raw);
         if (formatted.equals(raw)) {
+            if (!raw.equals(component.getString())) {
+                return Component.literal(raw).setStyle(component.getStyle());
+            }
             return component;
         }
 
@@ -113,9 +120,6 @@ public abstract class ItemStackClientMixin {
             PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
 
             if (potentialAttribute != null) {
-                Tierify.LOGGER.info("Tooltip name read tier {} for {}", tier, BuiltInRegistries.ITEM.getKey(((ItemStack) (Object) this).getItem()));
-                Tierify.LOGGER.info("Tooltip name attributes for {} -> {}", tier, potentialAttribute.getAttributes());
-                Tierify.LOGGER.info("[TierifyDebug][Tooltip] item={} tier={} attributes={}", BuiltInRegistries.ITEM.getKey(((ItemStack) (Object) this).getItem()), tier, potentialAttribute.getAttributes());
                 MutableComponent text = Component.translatable(potentialAttribute.getID() + ".label");
 
                 if (Tierify.CLIENT_CONFIG.showPlatesOnName) {
@@ -147,9 +151,6 @@ public abstract class ItemStackClientMixin {
             PotentialAttribute potentialAttribute = Tierify.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
 
             if (potentialAttribute != null) {
-                Tierify.LOGGER.info("Tooltip body read tier {} for {}", tier, BuiltInRegistries.ITEM.getKey(((ItemStack) (Object) this).getItem()));
-                Tierify.LOGGER.info("Tooltip body attributes for {} -> {}", tier, potentialAttribute.getAttributes());
-                Tierify.LOGGER.info("[TierifyDebug][Tooltip] item={} tier={} attributes={}", BuiltInRegistries.ITEM.getKey(((ItemStack) (Object) this).getItem()), tier, potentialAttribute.getAttributes());
                 tooltip.add(Component.literal("Tier: ").append(Component.translatable(potentialAttribute.getID() + ".label").setStyle(potentialAttribute.getStyle())));
             }
         }

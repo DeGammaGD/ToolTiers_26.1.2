@@ -37,40 +37,54 @@ public class AttributeHelper {
     }
 
     /**
-     * Computes the bonus enchantment-style protection points contributed by ToolTiers protection attributes on
-     * the entity's equipment for the given damage source. Generic protection counts as one point per level
-     * (all damage); the typed protections count as two points per level when the damage source matches, mirroring
-     * the vanilla Fire/Blast/Projectile Protection coefficients. The result is added on top of vanilla protection.
+     * Maximum fraction of damage the ToolTiers protection attributes are allowed to remove. Acts as the total
+     * protection cap requested by the design (95%).
      */
-    public static float getProtectionBonus(net.minecraft.world.entity.LivingEntity entity,
-                                            net.minecraft.world.damagesource.DamageSource source) {
+    public static final double MAX_PROTECTION_REDUCTION = 0.95D;
+
+    /**
+     * Computes the percentage of damage that ToolTiers protection attributes should remove for the given damage
+     * source, summed across the entity's equipment. Generic {@code protection} applies to all damage; the typed
+     * protections ({@code fire}/{@code blast}/{@code projectile}) add their amount only when the damage source
+     * matches. The result is a fraction in {@code [0, 0.95]} and is applied as a multiplier on the existing
+     * (post-vanilla) damage rather than as enchantment levels.
+     */
+    public static double getProtectionReductionPercent(net.minecraft.world.entity.LivingEntity entity,
+                                                       net.minecraft.world.damagesource.DamageSource source) {
         if (entity == null) {
-            return 0.0f;
+            return 0.0D;
         }
 
         boolean isFire = source != null && source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE);
         boolean isExplosion = source != null && source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION);
         boolean isProjectile = source != null && source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE);
 
-        double bonus = 0.0D;
+        double percent = 0.0D;
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             ItemStack stack = entity.getItemBySlot(slot);
             if (stack == null || stack.isEmpty()) {
                 continue;
             }
 
-            bonus += getItemAttributeAmount(stack, CustomEntityAttributes.PROTECTION);
+            percent += getItemAttributeAmount(stack, CustomEntityAttributes.PROTECTION);
             if (isFire) {
-                bonus += 2.0D * getItemAttributeAmount(stack, CustomEntityAttributes.FIRE_PROTECTION);
+                percent += getItemAttributeAmount(stack, CustomEntityAttributes.FIRE_PROTECTION);
             }
             if (isExplosion) {
-                bonus += 2.0D * getItemAttributeAmount(stack, CustomEntityAttributes.BLAST_PROTECTION);
+                percent += getItemAttributeAmount(stack, CustomEntityAttributes.BLAST_PROTECTION);
             }
             if (isProjectile) {
-                bonus += 2.0D * getItemAttributeAmount(stack, CustomEntityAttributes.PROJECTILE_PROTECTION);
+                percent += getItemAttributeAmount(stack, CustomEntityAttributes.PROJECTILE_PROTECTION);
             }
         }
-        return (float) bonus;
+
+        if (percent < 0.0D) {
+            return 0.0D;
+        }
+        if (percent > MAX_PROTECTION_REDUCTION) {
+            return MAX_PROTECTION_REDUCTION;
+        }
+        return percent;
     }
 
     private static float normalizeChance(float rawChance) {
@@ -147,45 +161,14 @@ public class AttributeHelper {
     }
 
     public static boolean shouldMeleeCrit(Player playerEntity) {
-        // NOTE: Do NOT re-check getAttackStrengthScale() here. This method is only reached from the
-        // attack() crit hook, which fires inside the canCriticalAttack() call that vanilla only invokes
-        // when the (already-captured) full-strength attack condition is true. By the time we run, attack()
-        // has already called resetAttackStrengthTicker(), so re-querying the scale always returns ~0.04
-        // and would reject every crit. The full-strength gate is therefore already guaranteed by vanilla.
+        // Custom melee crit chance roll. Vanilla crit state is tracked separately and handled by the
+        // attack pipeline context to avoid stacking custom and vanilla crit multipliers.
         float criticalChance = getCriticalChance(playerEntity);
         return criticalChance > 0.0f && playerEntity.getRandom().nextFloat() < criticalChance;
     }
 
     public static boolean shouldMeeleCrit(Player playerEntity) {
         return shouldMeleeCrit(playerEntity);
-    }
-
-    public static float getExtraDigSpeed(Player playerEntity, float oldDigSpeed) {
-        float extraDigSpeed = oldDigSpeed;
-        boolean foundModifier = false;
-        for (var attribute : CustomEntityAttributes.HASTE_ATTRIBUTES) {
-            AttributeInstance instance = playerEntity.getAttribute(BuiltInRegistries.ATTRIBUTE.wrapAsHolder(attribute));
-            if (instance == null) {
-                continue;
-            }
-
-            for (AttributeModifier modifier : instance.getModifiers()) {
-                foundModifier = true;
-                float amount = (float) modifier.amount();
-
-                if (modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
-                    extraDigSpeed += amount;
-                } else {
-                    extraDigSpeed *= (amount + 1);
-                }
-            }
-        }
-
-        if (foundModifier) {
-            return extraDigSpeed;
-        }
-
-        return oldDigSpeed;
     }
 
     public static float getExtraRangeDamage(Player playerEntity, float oldDamage) {

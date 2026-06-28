@@ -1,0 +1,22 @@
+﻿{
+    "id":  "tiered:utilities/epic",
+    "verifiers":  [
+                      {
+                          "id":  "minecraft:flint_and_steel"
+                      },
+                      {
+                          "id":  "minecraft:brush"
+                      },
+                      {
+                          "id":  "minecraft:carrot_on_a_stick"
+                      },
+                      {
+                          "id":  "minecraft:warped_fungus_on_a_stick"
+                      }
+                  ],
+    "weight":  16,
+    "style":  {
+                  "color":  "dark_purple"
+              },
+    "modifier_pool":  "tiered:utilities/epic"
+}

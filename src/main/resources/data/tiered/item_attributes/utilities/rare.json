@@ -1,0 +1,22 @@
+﻿{
+    "id":  "tiered:utilities/rare",
+    "verifiers":  [
+                      {
+                          "id":  "minecraft:flint_and_steel"
+                      },
+                      {
+                          "id":  "minecraft:brush"
+                      },
+                      {
+                          "id":  "minecraft:carrot_on_a_stick"
+                      },
+                      {
+                          "id":  "minecraft:warped_fungus_on_a_stick"
+                      }
+                  ],
+    "weight":  30,
+    "style":  {
+                  "color":  "blue"
+              },
+    "modifier_pool":  "tiered:utilities/rare"
+}

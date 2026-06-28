@@ -2,58 +2,50 @@ package elocindev.tierify.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 
 import draylar.tiered.api.CustomEntityAttributes;
+import elocindev.tierify.Tierify;
 import elocindev.tierify.util.AttributeHelper;
+import elocindev.tierify.util.CombatContextHelper;
+import elocindev.tierify.util.LuckyShotHelper;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
-import net.minecraft.world.item.ItemInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 
+import java.util.function.Consumer;
+
 /**
- * Makes the {@code tiered:generic.looting} and {@code tiered:generic.fortune} custom attributes behave like
- * the vanilla Looting and Fortune enchantments without requiring the enchantment to be present. Vanilla loot
- * functions (enchanted_count_increase / apply_bonus) read the enchantment level through
- * {@link EnchantmentHelper#getItemEnchantmentLevel}, so adding the tiered attribute value on top of the real
- * level transparently grants the bonus drops.
+ * Connects several ToolTiers combat attributes to the matching vanilla enchantment mechanics without requiring the
+ * enchantment to be present. Looting and Fortune are handled separately (as percentage drop multipliers in
+ * {@code LootTableMixin}); this mixin covers the aggregate combat hooks (Breach, Power, Density) and crossbow
+ * Quick Draw. Protection is handled in {@code LivingEntityProtectionMixin} as a percentage damage reduction.
  */
 @Mixin(EnchantmentHelper.class)
 public class EnchantmentHelperMixin {
 
-    @ModifyReturnValue(method = "getItemEnchantmentLevel(Lnet/minecraft/core/Holder;Lnet/minecraft/world/item/ItemInstance;)I", at = @At("RETURN"))
-    private static int tierify$addTieredEnchantmentLevels(int original, Holder<Enchantment> enchantment, ItemInstance item) {
-        int bonus = 0;
-
-        if (enchantment.is(Enchantments.LOOTING)) {
-            bonus = (int) Math.floor(AttributeHelper.getItemAttributeAmount(item, CustomEntityAttributes.LOOTING));
-        } else if (enchantment.is(Enchantments.FORTUNE)) {
-            bonus = (int) Math.floor(AttributeHelper.getItemAttributeAmount(item, CustomEntityAttributes.FORTUNE));
-        }
-
-        if (bonus <= 0) {
-            return original;
-        }
-
-        return original + bonus;
-    }
-
-    /**
-     * Adds the ToolTiers protection attributes ({@code protection}, {@code fire_protection}, {@code blast_protection},
-     * {@code projectile_protection}) on top of the vanilla enchantment protection points, so they reduce incoming
-     * damage exactly like the matching protection enchantments without requiring the enchantment.
-     */
-    @ModifyReturnValue(method = "getDamageProtection(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;)F", at = @At("RETURN"))
-    private static float tierify$addTieredProtection(float original, ServerLevel level, LivingEntity entity, DamageSource source) {
-        return original + AttributeHelper.getProtectionBonus(entity, source);
+    private static int tierify$getEnchantmentLevel(ServerLevel level, ItemStack stack, net.minecraft.resources.ResourceKey<Enchantment> enchantmentKey) {
+        Holder<Enchantment> enchantment = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(enchantmentKey);
+        return EnchantmentHelper.getItemEnchantmentLevel(enchantment, stack);
     }
 
     /**
@@ -70,21 +62,50 @@ public class EnchantmentHelperMixin {
     }
 
     /**
-     * Mirrors the vanilla Power enchantment ({@code damage} add {@code base 1.0, +0.5 per level above first},
-     * gated on the direct attacker being an arrow) for the {@code tiered:generic.power} attribute on bows/crossbows.
-     * {@code AbstractArrow.onHitEntity} routes its damage through {@code modifyDamage} with the firing weapon, so the
-     * bonus stacks on top of any real Power enchantment.
+     * Applies tiered ranged-weapon damage modifiers at the same final projectile damage hook used by vanilla
+     * enchantment logic. {@code tiered:generic.power} mirrors the vanilla Power enchantment bonus, while
+     * {@code tiered:generic.critical_damage} acts as a pure multiplier on the resulting arrow damage. This keeps
+     * vanilla charging, velocity, and random melee-style crit logic out of the ranged path.
      */
     @ModifyReturnValue(method = "modifyDamage(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;F)F", at = @At("RETURN"))
-    private static float tierify$addTieredPower(float damage, ServerLevel level, ItemStack weapon, Entity victim, DamageSource source) {
-        if (source == null || !(source.getDirectEntity() instanceof AbstractArrow)) {
+    private static float tierify$addTieredPowerAndCriticalDamage(float damage, ServerLevel level, ItemStack weapon, Entity victim, DamageSource source) {
+        if (source == null) {
             return damage;
         }
+
+        if (source.getDirectEntity() instanceof Player player) {
+            if (CombatContextHelper.wasVanillaMeleeCrit()) {
+                return damage;
+            }
+            if (AttributeHelper.shouldMeleeCrit(player)) {
+                float modifiedDamage = damage * (1.5F + AttributeHelper.getCriticalDamageModifier(player));
+                player.crit(victim);
+                return modifiedDamage;
+            }
+            return damage;
+        }
+
+        if (!(source.getDirectEntity() instanceof AbstractArrow)) {
+            return damage;
+        }
+
+        float modifiedDamage = damage;
         double power = AttributeHelper.getItemAttributeAmount(weapon, CustomEntityAttributes.POWER);
         if (power <= 0.0D) {
-            return damage;
+            double criticalDamage = AttributeHelper.getItemAttributeAmount(weapon, CustomEntityAttributes.CRITICAL_DAMAGE);
+            if (criticalDamage <= 0.0D) {
+                return modifiedDamage;
+            }
+            return modifiedDamage * (1.0f + (float) criticalDamage);
         }
-        return damage + (float) (0.5D * power + 0.5D);
+
+        modifiedDamage += (float) (0.5D * power + 0.5D);
+
+        double criticalDamage = AttributeHelper.getItemAttributeAmount(weapon, CustomEntityAttributes.CRITICAL_DAMAGE);
+        if (criticalDamage <= 0.0D) {
+            return modifiedDamage;
+        }
+        return modifiedDamage * (1.0f + (float) criticalDamage);
     }
 
     /**
@@ -106,8 +127,9 @@ public class EnchantmentHelperMixin {
     }
 
     /**
-     * Mirrors the vanilla Quick Charge enchantment ({@code crossbow_charge_time} add {@code -0.25} per level) for the
-     * {@code tiered:generic.quick_draw} attribute, shortening crossbow charge time (in seconds).
+     * Speeds up crossbow charging for the {@code tiered:generic.quick_draw} attribute using a percentage of the
+     * base charge time: {@code newTime = baseTime * (1 - quick_draw)}. The charge time is clamped so it can never
+     * drop below 5% of the base, preventing instant/zero charge times.
      */
     @ModifyReturnValue(method = "modifyCrossbowChargingTime(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;F)F", at = @At("RETURN"))
     private static float tierify$quickDrawCrossbow(float chargeTime, ItemStack weapon, LivingEntity entity) {
@@ -115,6 +137,71 @@ public class EnchantmentHelperMixin {
         if (quickDraw <= 0.0D) {
             return chargeTime;
         }
-        return Math.max(0.0f, chargeTime - (float) (0.25D * quickDraw));
+        double factor = 1.0D - quickDraw;
+        if (factor < 0.05D) {
+            factor = 0.05D;
+        }
+        return chargeTime * (float) factor;
+    }
+
+    @Inject(method = "doPostAttackEffectsWithItemSourceOnBreak(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Consumer;)V", at = @At("TAIL"))
+    private static void tierify$applyChannelingChance(ServerLevel level,
+                                                       Entity victim,
+                                                       DamageSource source,
+                                                       ItemStack weapon,
+                                                       Consumer<Item> onBreak,
+                                                       CallbackInfo ci) {
+        if (source == null || !(source.getDirectEntity() instanceof ThrownTrident)) {
+            return;
+        }
+
+        if (victim == null || !victim.isAlive()) {
+            return;
+        }
+
+        if (tierify$getEnchantmentLevel(level, weapon, Enchantments.CHANNELING) <= 0) {
+            return;
+        }
+
+        double chance = AttributeHelper.getItemAttributeAmount(weapon, CustomEntityAttributes.CHANNELING_CHANCE);
+        if (chance <= 0.0D) {
+            return;
+        }
+
+        double normalizedChance = Math.max(0.0D, Math.min(1.0D, chance));
+        if (level.getRandom().nextDouble() > normalizedChance) {
+            return;
+        }
+
+        LightningBolt bolt = new LightningBolt(EntityType.LIGHTNING_BOLT, level);
+        bolt.snapTo(victim.getX(), victim.getY(), victim.getZ());
+        if (source.getEntity() instanceof ServerPlayer player) {
+            bolt.setCause(player);
+        }
+        level.addFreshEntity(bolt);
+    }
+
+    @Inject(method = "onProjectileSpawned(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/projectile/Projectile;Ljava/util/function/Consumer;)V", at = @At("TAIL"))
+    private static void tierify$applyLuckyShot(ServerLevel level, ItemStack weapon, Projectile projectile, Consumer<Item> onBreak, CallbackInfo ci) {
+        if (!(projectile instanceof Arrow arrow)) {
+            return;
+        }
+
+        if (!(projectile.getOwner() instanceof Player player)) {
+            return;
+        }
+
+        if (!LuckyShotHelper.isEligibleNormalArrow(arrow)) {
+            return;
+        }
+
+        double chance = LuckyShotHelper.getLuckyShotChance(weapon);
+        if (chance <= 0.0D || player.getRandom().nextDouble() > chance) {
+            return;
+        }
+
+        LuckyShotHelper.LuckyShotEffect effect = LuckyShotHelper.getRandomLuckyShotEffect(player.getRandom());
+        LuckyShotHelper.applyLuckyShotEffect(arrow, effect);
+        Tierify.LOGGER.info("LUCKY SHOT: {}", effect.debugName());
     }
 }

@@ -1,0 +1,13 @@
+﻿{
+    "id":  "tiered:utilities_shears/uncommon",
+    "verifiers":  [
+                      {
+                          "id":  "minecraft:shears"
+                      }
+                  ],
+    "weight":  70,
+    "style":  {
+                  "color":  "dark_green"
+              },
+    "modifier_pool":  "tiered:utilities_shears/uncommon"
+}

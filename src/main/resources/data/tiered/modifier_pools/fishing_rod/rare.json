@@ -1,11 +1,11 @@
 ﻿{
     "attributes":  [
                        {
-                           "type":  "generic.luck",
+                           "type":  "tiered:generic.durability",
                            "modifier":  {
-                                            "name":  "tiered:rare_fishing_1",
-                                            "operation":  "ADDITION",
-                                            "amount":  0.5
+                                            "name":  "tiered:rare_fishing_durability",
+                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "amount":  0.08
                                         },
                            "optional_equipment_slots":  [
                                                             "MAINHAND",
@@ -13,11 +13,11 @@
                                                         ]
                        },
                        {
-                           "type":  "tiered:generic.durability",
+                           "type":  "tiered:generic.mastery",
                            "modifier":  {
-                                            "name":  "tiered:uncommon_fishing_2",
+                                            "name":  "tiered:rare_fishing_mastery",
                                             "operation":  "ADD_MULTIPLIED_BASE",
-                                            "amount":  0.1
+                                            "amount":  0.08
                                         },
                            "optional_equipment_slots":  [
                                                             "MAINHAND",
@@ -26,5 +26,3 @@
                        }
                    ]
 }
-
-

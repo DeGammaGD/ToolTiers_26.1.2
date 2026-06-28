@@ -3,9 +3,9 @@
                        {
                            "type":  "tiered:generic.durability",
                            "modifier":  {
-                                            "name":  "tiered:common_fishing_2",
+                                            "name":  "tiered:common_fishing_durability",
                                             "operation":  "ADD_MULTIPLIED_BASE",
-                                            "amount":  -0.035
+                                            "amount":  -0.04
                                         },
                            "optional_equipment_slots":  [
                                                             "MAINHAND",
@@ -13,23 +13,11 @@
                                                         ]
                        },
                        {
-                           "type":  "generic.luck",
+                           "type":  "tiered:generic.mastery",
                            "modifier":  {
-                                            "name":  "tiered:common_fishing_1",
-                                            "operation":  "ADDITION",
-                                            "amount":  -3
-                                        },
-                           "optional_equipment_slots":  [
-                                                            "MAINHAND",
-                                                            "OFFHAND"
-                                                        ]
-                       },
-                       {
-                           "type":  "generic.luck",
-                           "modifier":  {
-                                            "name":  "tiered:common_fishing_2",
-                                            "operation":  "ADDITION",
-                                            "amount":  -2
+                                            "name":  "tiered:common_fishing_mastery",
+                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "amount":  -0.06
                                         },
                            "optional_equipment_slots":  [
                                                             "MAINHAND",
@@ -38,5 +26,3 @@
                        }
                    ]
 }
-
-

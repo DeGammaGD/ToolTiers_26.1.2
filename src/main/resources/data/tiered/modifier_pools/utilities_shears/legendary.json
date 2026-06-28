@@ -1,0 +1,53 @@
+﻿{
+    "attributes":  [
+                       {
+                           "type":  "tiered:generic.durability",
+                           "modifier":  {
+                                            "name":  "tiered:legendary_utilities_shears_durability",
+                                            "operation":  "ADD_VALUE",
+                                            "amount":  0.24
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND",
+                                                            "OFFHAND"
+                                                        ]
+                       },
+                       {
+                           "type":  "tiered:generic.mastery",
+                           "modifier":  {
+                                            "name":  "tiered:legendary_utilities_shears_mastery",
+                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "amount":  0.18
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND",
+                                                            "OFFHAND"
+                                                        ]
+                       },
+                       {
+                           "type":  "minecraft:block_interaction_range",
+                           "modifier":  {
+                                            "name":  "tiered:legendary_utilities_shears_block_interaction_range",
+                                            "operation":  "ADD_VALUE",
+                                            "amount":  0.75
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND",
+                                                            "OFFHAND"
+                                                        ]
+                       },
+                       {
+                           "type":  "minecraft:mining_efficiency",
+                           "modifier":  {
+                                            "name":  "tiered:legendary_utilities_shears_block_break_speed",
+                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "amount":  0.3
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND",
+                                                            "OFFHAND"
+                                                        ]
+                       }
+                   ]
+}
+

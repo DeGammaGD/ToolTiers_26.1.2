@@ -1,0 +1,13 @@
+﻿{
+    "id":  "tiered:utilities_shears/epic",
+    "verifiers":  [
+                      {
+                          "id":  "minecraft:shears"
+                      }
+                  ],
+    "weight":  16,
+    "style":  {
+                  "color":  "dark_purple"
+              },
+    "modifier_pool":  "tiered:utilities_shears/epic"
+}

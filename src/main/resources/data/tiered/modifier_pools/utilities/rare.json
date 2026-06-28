@@ -1,0 +1,40 @@
+﻿{
+    "attributes":  [
+                       {
+                           "type":  "tiered:generic.durability",
+                           "modifier":  {
+                                            "name":  "tiered:rare_utilities_durability",
+                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "amount":  0.08
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND",
+                                                            "OFFHAND"
+                                                        ]
+                       },
+                       {
+                           "type":  "tiered:generic.mastery",
+                           "modifier":  {
+                                            "name":  "tiered:rare_utilities_mastery",
+                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "amount":  0.06
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND",
+                                                            "OFFHAND"
+                                                        ]
+                       },
+                       {
+                           "type":  "minecraft:block_interaction_range",
+                           "modifier":  {
+                                            "name":  "tiered:rare_utilities_block_interaction_range",
+                                            "operation":  "ADD_VALUE",
+                                            "amount":  0.25
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND",
+                                                            "OFFHAND"
+                                                        ]
+                       }
+                   ]
+}

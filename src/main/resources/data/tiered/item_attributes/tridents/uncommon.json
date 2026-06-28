@@ -1,0 +1,13 @@
+{
+  "id": "tiered:tridents/uncommon",
+  "verifiers": [
+    {
+      "tag": "c:tridents"
+    }
+  ],
+  "weight": 140,
+  "style": {
+    "color": "dark_green"
+  },
+  "modifier_pool": "tiered:tridents/uncommon"
+}

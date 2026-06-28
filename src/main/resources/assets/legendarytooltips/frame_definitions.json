@@ -1,226 +1,160 @@
-{
-    "definitions": [
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 1,
-            "startColor": "#BABABA",
-            "endColor": "#565656",
-            "selectors": [
-                "&Tiered={Tier:\"tiered:common_armor_1\"}",
-                "&Tiered={Tier:\"tiered:common_armor_2\"}",
-                "&Tiered={Tier:\"tiered:common_armor_3\"}",
-                "&Tiered={Tier:\"tiered:common_armor_4\"}",
-                "&Tiered={Tier:\"tiered:common_tool_1\"}",
-                "&Tiered={Tier:\"tiered:common_tool_2\"}",
-                "&Tiered={Tier:\"tiered:common_tool_3\"}",
-                "&Tiered={Tier:\"tiered:common_tool_4\"}",
-                "&Tiered={Tier:\"tiered:common_melee_1\"}",
-                "&Tiered={Tier:\"tiered:common_melee_2\"}",
-                "&Tiered={Tier:\"tiered:common_melee_3\"}",
-                "&Tiered={Tier:\"tiered:common_melee_4\"}",
-                "&Tiered={Tier:\"tiered:common_ranged_1\"}",
-                "&Tiered={Tier:\"tiered:common_ranged_2\"}",
-                "&Tiered={Tier:\"tiered:common_ranged_3\"}",
-                "&Tiered={Tier:\"tiered:common_ranged_4\"}",
-                "&Tiered={Tier:\"tiered:common_fishing_1\"}",
-                "&Tiered={Tier:\"tiered:common_fishing_2\"}",
-                "&Tiered={Tier:\"tiered:common_fishing_3\"}",
-                "&Tiered={Tier:\"tiered:common_fishing_4\"}",
-                "&Tiered={Tier:\"tiered:common_shield_1\"}",
-                "&Tiered={Tier:\"tiered:common_shield_2\"}",
-                "&Tiered={Tier:\"tiered:common_shield_3\"}",
-                "&Tiered={Tier:\"tiered:common_shield_4\"}"
-            ]
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 2,
-            "startColor": "#3FC43A",
-            "endColor": "#133F2A",
-            "selectors": [
-                "&Tiered={Tier:\"tiered:uncommon_armor_1\"}",
-                "&Tiered={Tier:\"tiered:uncommon_armor_2\"}",
-                "&Tiered={Tier:\"tiered:uncommon_armor_3\"}",
-                "&Tiered={Tier:\"tiered:uncommon_armor_4\"}",
-                "&Tiered={Tier:\"tiered:uncommon_tool_1\"}",
-                "&Tiered={Tier:\"tiered:uncommon_tool_2\"}",
-                "&Tiered={Tier:\"tiered:uncommon_tool_3\"}",
-                "&Tiered={Tier:\"tiered:uncommon_tool_4\"}",
-                "&Tiered={Tier:\"tiered:uncommon_melee_1\"}",
-                "&Tiered={Tier:\"tiered:uncommon_melee_2\"}",
-                "&Tiered={Tier:\"tiered:uncommon_melee_3\"}",
-                "&Tiered={Tier:\"tiered:uncommon_melee_4\"}",
-                "&Tiered={Tier:\"tiered:uncommon_ranged_1\"}",
-                "&Tiered={Tier:\"tiered:uncommon_ranged_2\"}",
-                "&Tiered={Tier:\"tiered:uncommon_ranged_3\"}",
-                "&Tiered={Tier:\"tiered:uncommon_ranged_4\"}",
-                "&Tiered={Tier:\"tiered:uncommon_fishing_1\"}",
-                "&Tiered={Tier:\"tiered:uncommon_fishing_2\"}",
-                "&Tiered={Tier:\"tiered:uncommon_fishing_3\"}",
-                "&Tiered={Tier:\"tiered:uncommon_fishing_4\"}",
-                "&Tiered={Tier:\"tiered:uncommon_shield_1\"}",
-                "&Tiered={Tier:\"tiered:uncommon_shield_2\"}",
-                "&Tiered={Tier:\"tiered:uncommon_shield_3\"}",
-                "&Tiered={Tier:\"tiered:uncommon_shield_4\"}"
-            ]
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 3,
-            "startColor": "#163F54",
-            "endColor": "#163F54",
-            "selectors": [
-                "&Tiered={Tier:\"tiered:rare_armor_1\"}",
-                "&Tiered={Tier:\"tiered:rare_armor_2\"}",
-                "&Tiered={Tier:\"tiered:rare_armor_3\"}",
-                "&Tiered={Tier:\"tiered:rare_armor_4\"}",
-                "&Tiered={Tier:\"tiered:rare_tool_1\"}",
-                "&Tiered={Tier:\"tiered:rare_tool_2\"}",
-                "&Tiered={Tier:\"tiered:rare_tool_3\"}",
-                "&Tiered={Tier:\"tiered:rare_tool_4\"}",
-                "&Tiered={Tier:\"tiered:rare_melee_1\"}",
-                "&Tiered={Tier:\"tiered:rare_melee_2\"}",
-                "&Tiered={Tier:\"tiered:rare_melee_3\"}",
-                "&Tiered={Tier:\"tiered:rare_melee_4\"}",
-                "&Tiered={Tier:\"tiered:rare_ranged_1\"}",
-                "&Tiered={Tier:\"tiered:rare_ranged_2\"}",
-                "&Tiered={Tier:\"tiered:rare_ranged_3\"}",
-                "&Tiered={Tier:\"tiered:rare_ranged_4\"}",
-                "&Tiered={Tier:\"tiered:rare_fishing_1\"}",
-                "&Tiered={Tier:\"tiered:rare_fishing_2\"}",
-                "&Tiered={Tier:\"tiered:rare_fishing_3\"}",
-                "&Tiered={Tier:\"tiered:rare_fishing_4\"}",
-                "&Tiered={Tier:\"tiered:rare_shield_1\"}",
-                "&Tiered={Tier:\"tiered:rare_shield_2\"}",
-                "&Tiered={Tier:\"tiered:rare_shield_3\"}",
-                "&Tiered={Tier:\"tiered:rare_shield_4\"}"
-            ]
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 4,
-            "startColor": "#380F54",
-            "endColor": "#380F54",
-            "selectors": [
-                "&Tiered={Tier:\"tiered:epic_armor_1\"}",
-                "&Tiered={Tier:\"tiered:epic_armor_2\"}",
-                "&Tiered={Tier:\"tiered:epic_armor_3\"}",
-                "&Tiered={Tier:\"tiered:epic_armor_4\"}",
-                "&Tiered={Tier:\"tiered:epic_tool_1\"}",
-                "&Tiered={Tier:\"tiered:epic_tool_2\"}",
-                "&Tiered={Tier:\"tiered:epic_tool_3\"}",
-                "&Tiered={Tier:\"tiered:epic_tool_4\"}",
-                "&Tiered={Tier:\"tiered:epic_melee_1\"}",
-                "&Tiered={Tier:\"tiered:epic_melee_2\"}",
-                "&Tiered={Tier:\"tiered:epic_melee_3\"}",
-                "&Tiered={Tier:\"tiered:epic_melee_4\"}",
-                "&Tiered={Tier:\"tiered:epic_ranged_1\"}",
-                "&Tiered={Tier:\"tiered:epic_ranged_2\"}",
-                "&Tiered={Tier:\"tiered:epic_ranged_3\"}",
-                "&Tiered={Tier:\"tiered:epic_ranged_4\"}",
-                "&Tiered={Tier:\"tiered:epic_fishing_1\"}",
-                "&Tiered={Tier:\"tiered:epic_fishing_2\"}",
-                "&Tiered={Tier:\"tiered:epic_fishing_3\"}",
-                "&Tiered={Tier:\"tiered:epic_fishing_4\"}",
-                "&Tiered={Tier:\"tiered:epic_shield_1\"}",
-                "&Tiered={Tier:\"tiered:epic_shield_2\"}",
-                "&Tiered={Tier:\"tiered:epic_shield_3\"}",
-                "&Tiered={Tier:\"tiered:epic_shield_4\"}"
-            ]
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 5,
-            "startColor": "#6D3C24",
-            "endColor": "#6D3C24",
-            "selectors": [
-                "&Tiered={Tier:\"tiered:legendary_armor_1\"}",
-                "&Tiered={Tier:\"tiered:legendary_armor_2\"}",
-                "&Tiered={Tier:\"tiered:legendary_armor_3\"}",
-                "&Tiered={Tier:\"tiered:legendary_armor_4\"}",
-                "&Tiered={Tier:\"tiered:legendary_tool_1\"}",
-                "&Tiered={Tier:\"tiered:legendary_tool_2\"}",
-                "&Tiered={Tier:\"tiered:legendary_tool_3\"}",
-                "&Tiered={Tier:\"tiered:legendary_tool_4\"}",
-                "&Tiered={Tier:\"tiered:legendary_melee_1\"}",
-                "&Tiered={Tier:\"tiered:legendary_melee_2\"}",
-                "&Tiered={Tier:\"tiered:legendary_melee_3\"}",
-                "&Tiered={Tier:\"tiered:legendary_melee_4\"}",
-                "&Tiered={Tier:\"tiered:legendary_ranged_1\"}",
-                "&Tiered={Tier:\"tiered:legendary_ranged_2\"}",
-                "&Tiered={Tier:\"tiered:legendary_ranged_3\"}",
-                "&Tiered={Tier:\"tiered:legendary_ranged_4\"}",
-                "&Tiered={Tier:\"tiered:legendary_fishing_1\"}",
-                "&Tiered={Tier:\"tiered:legendary_fishing_2\"}",
-                "&Tiered={Tier:\"tiered:legendary_fishing_3\"}",
-                "&Tiered={Tier:\"tiered:legendary_fishing_4\"}",
-                "&Tiered={Tier:\"tiered:legendary_shield_1\"}",
-                "&Tiered={Tier:\"tiered:legendary_shield_2\"}",
-                "&Tiered={Tier:\"tiered:legendary_shield_3\"}",
-                "&Tiered={Tier:\"tiered:legendary_shield_4\"}"
-            ]
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 6,
-            "startColor": "#5C4C2D",
-            "endColor": "#5C4C2D",
-            "selectors": [
-                "&Tiered={Tier:\"tiered:mythic_armor_1\"}",
-                "&Tiered={Tier:\"tiered:mythic_armor_2\"}",
-                "&Tiered={Tier:\"tiered:mythic_armor_3\"}",
-                "&Tiered={Tier:\"tiered:mythic_armor_4\"}",
-                "&Tiered={Tier:\"tiered:mythic_tool_1\"}",
-                "&Tiered={Tier:\"tiered:mythic_tool_2\"}",
-                "&Tiered={Tier:\"tiered:mythic_tool_3\"}",
-                "&Tiered={Tier:\"tiered:mythic_tool_4\"}",
-                "&Tiered={Tier:\"tiered:mythic_melee_1\"}",
-                "&Tiered={Tier:\"tiered:mythic_melee_2\"}",
-                "&Tiered={Tier:\"tiered:mythic_melee_3\"}",
-                "&Tiered={Tier:\"tiered:mythic_melee_4\"}",
-                "&Tiered={Tier:\"tiered:mythic_ranged_1\"}",
-                "&Tiered={Tier:\"tiered:mythic_ranged_2\"}",
-                "&Tiered={Tier:\"tiered:mythic_ranged_3\"}",
-                "&Tiered={Tier:\"tiered:mythic_ranged_4\"}",
-                "&Tiered={Tier:\"tiered:mythic_fishing_1\"}",
-                "&Tiered={Tier:\"tiered:mythic_fishing_2\"}",
-                "&Tiered={Tier:\"tiered:mythic_fishing_3\"}",
-                "&Tiered={Tier:\"tiered:mythic_fishing_4\"}",
-                "&Tiered={Tier:\"tiered:mythic_shield_1\"}",
-                "&Tiered={Tier:\"tiered:mythic_shield_2\"}",
-                "&Tiered={Tier:\"tiered:mythic_shield_3\"}",
-                "&Tiered={Tier:\"tiered:mythic_shield_4\"}"
-            ]
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 7,
-            "startColor": "#1C265E",
-            "endColor": "#1C265E",
-            "selectors": []
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 14,
-            "startColor": "#100110",
-            "endColor": "#100110",
-            "selectors": [
-                "%Pois1x's"
-            ]
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 9,
-            "startColor": "#A591B6",
-            "endColor": "#A591B6",
-            "selectors": []
-        },
-        {
-            "image": "legendarytooltips:textures/gui/tiered_borders.png",
-            "index": 10,
-            "startColor": "#FFFADB",
-            "endColor": "#FFDFAD",
-            "selectors": []
-        }
-    ]
+﻿{
+    "definitions":  [
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  1,
+                            "startColor":  "#BABABA",
+                            "endColor":  "#565656",
+                            "selectors":  [
+                                              "\u0026Tiered={Tier:\"tiered:armor/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tools/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:melee_weapons/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:ranged_weapons/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:fishing_rod/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:shields/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:elytra/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:maces/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:spears/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tridents/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities/common\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities_shears/common\"}"
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  2,
+                            "startColor":  "#3FC43A",
+                            "endColor":  "#133F2A",
+                            "selectors":  [
+                                              "\u0026Tiered={Tier:\"tiered:armor/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tools/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:melee_weapons/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:ranged_weapons/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:fishing_rod/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:shields/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:elytra/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:maces/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:spears/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tridents/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities/uncommon\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities_shears/uncommon\"}"
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  3,
+                            "startColor":  "#163F54",
+                            "endColor":  "#163F54",
+                            "selectors":  [
+                                              "\u0026Tiered={Tier:\"tiered:armor/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tools/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:melee_weapons/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:ranged_weapons/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:fishing_rod/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:shields/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:elytra/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:maces/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:spears/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tridents/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities/rare\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities_shears/rare\"}"
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  4,
+                            "startColor":  "#380F54",
+                            "endColor":  "#380F54",
+                            "selectors":  [
+                                              "\u0026Tiered={Tier:\"tiered:armor/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tools/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:melee_weapons/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:ranged_weapons/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:fishing_rod/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:shields/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:elytra/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:maces/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:spears/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tridents/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities/epic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities_shears/epic\"}"
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  5,
+                            "startColor":  "#6D3C24",
+                            "endColor":  "#6D3C24",
+                            "selectors":  [
+                                              "\u0026Tiered={Tier:\"tiered:armor/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tools/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:melee_weapons/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:ranged_weapons/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:fishing_rod/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:shields/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:elytra/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:maces/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:spears/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tridents/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities/legendary\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities_shears/legendary\"}"
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  6,
+                            "startColor":  "#5C4C2D",
+                            "endColor":  "#5C4C2D",
+                            "selectors":  [
+                                              "\u0026Tiered={Tier:\"tiered:armor/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tools/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:melee_weapons/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:ranged_weapons/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:fishing_rod/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:shields/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:elytra/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:maces/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:spears/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:tridents/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities/mythic\"}",
+                                              "\u0026Tiered={Tier:\"tiered:utilities_shears/mythic\"}"
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  7,
+                            "startColor":  "#1C265E",
+                            "endColor":  "#1C265E",
+                            "selectors":  [
+
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  14,
+                            "startColor":  "#100110",
+                            "endColor":  "#100110",
+                            "selectors":  [
+                                              "%Pois1x\u0027s"
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  9,
+                            "startColor":  "#A591B6",
+                            "endColor":  "#A591B6",
+                            "selectors":  [
+
+                                          ]
+                        },
+                        {
+                            "image":  "legendarytooltips:textures/gui/tiered_borders.png",
+                            "index":  10,
+                            "startColor":  "#FFFADB",
+                            "endColor":  "#FFDFAD",
+                            "selectors":  [
+
+                                          ]
+                        }
+                    ]
 }

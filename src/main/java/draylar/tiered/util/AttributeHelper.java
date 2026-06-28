@@ -5,11 +5,6 @@ import net.minecraft.world.entity.player.Player;
 public class AttributeHelper {
 
     @Deprecated()
-    public static float getExtraDigSpeed(Player playerEntity, float oldDigSpeed) {
-        return elocindev.tierify.util.AttributeHelper.getExtraDigSpeed(playerEntity, oldDigSpeed);
-    }
-
-    @Deprecated()
     public static float getExtraRangeDamage(Player playerEntity, float oldDamage) {
         return elocindev.tierify.util.AttributeHelper.getExtraRangeDamage(playerEntity, oldDamage);
     }

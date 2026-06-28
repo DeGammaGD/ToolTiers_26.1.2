@@ -1,0 +1,13 @@
+{
+  "id": "tiered:tridents/mythic",
+  "verifiers": [
+    {
+      "tag": "c:tridents"
+    }
+  ],
+  "weight": 0,
+  "style": {
+    "color": "red"
+  },
+  "modifier_pool": "tiered:tridents/mythic"
+}

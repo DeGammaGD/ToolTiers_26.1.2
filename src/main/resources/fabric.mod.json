@@ -28,6 +28,9 @@
     ],
     "client": [
       "elocindev.tierify.TierifyClient"
+    ],
+    "modmenu": [
+      "elocindev.tierify.config.ModMenuIntegration"
     ]
   },
   "mixins": [
@@ -39,5 +42,8 @@
     "fabric-api": ">=${fabric_version}",
     "fabricloader": ">=${loader_version}",
     "cloth-config2": ">=${cloth_config_version}"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }

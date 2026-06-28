@@ -1,0 +1,78 @@
+{
+  "attributes": [
+    {
+      "type": "minecraft:attack_damage",
+      "modifier": {
+        "name": "tiered:rare_tridents_attack_damage",
+        "operation": "ADD_MULTIPLIED_BASE",
+        "amount": 0.06
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    },
+    {
+      "type": "tiered:generic.critical_chance",
+      "modifier": {
+        "name": "tiered:rare_tridents_critical_chance",
+        "operation": "ADD_VALUE",
+        "amount": 0.2
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    },
+    {
+      "type": "tiered:generic.critical_damage",
+      "modifier": {
+        "name": "tiered:rare_tridents_critical_damage",
+        "operation": "ADD_MULTIPLIED_BASE",
+        "amount": 0.32
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    },
+    {
+      "type": "tiered:generic.reach",
+      "modifier": {
+        "name": "tiered:rare_tridents_reach",
+        "operation": "ADD_VALUE",
+        "amount": 0.25
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    },
+    {
+      "type": "tiered:generic.durability",
+      "modifier": {
+        "name": "tiered:rare_tridents_durability",
+        "operation": "ADD_MULTIPLIED_BASE",
+        "amount": 0.05
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    },
+    {
+      "type": "tiered:generic.mastery",
+      "modifier": {
+        "name": "tiered:rare_tridents_mastery",
+        "operation": "ADD_MULTIPLIED_BASE",
+        "amount": 0.02
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    },
+    {
+      "type": "tiered:generic.riptide_power",
+      "exclusive_group": "trident_weather",
+      "modifier": {
+        "name": "tiered:rare_tridents_riptide_power",
+        "operation": "ADD_MULTIPLIED_BASE",
+        "amount": 0.18
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    },
+    {
+      "type": "tiered:generic.channeling_chance",
+      "exclusive_group": "trident_weather",
+      "modifier": {
+        "name": "tiered:rare_tridents_channeling_chance",
+        "operation": "ADD_VALUE",
+        "amount": 0.22
+      },
+      "optional_equipment_slots": ["MAINHAND"]
+    }
+  ]
+}

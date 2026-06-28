@@ -242,7 +242,7 @@ public class AttributeDataLoader implements SimpleSynchronousResourceReloadListe
                 }
 
                 PotentialAttribute aliasAttribute = new PotentialAttribute(
-                        aliasId.toString(),
+                    canonical.getID(),
                         canonical.getVerifiers(),
                         0,
                         canonical.getStyle(),

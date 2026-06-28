@@ -12,12 +12,6 @@
                       },
                       {
                           "tag":  "c:hoes"
-                      },
-                      {
-                          "tag":  "c:shears"
-                      },
-                      {
-                          "tag":  "c:flint_and_steel"
                       }
                   ],
     "weight":  140,
@@ -26,4 +20,3 @@
               },
     "modifier_pool":  "tiered:tools/uncommon"
 }
-

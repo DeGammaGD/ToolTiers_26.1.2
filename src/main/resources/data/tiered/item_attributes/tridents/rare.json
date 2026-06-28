@@ -1,0 +1,13 @@
+{
+  "id": "tiered:tridents/rare",
+  "verifiers": [
+    {
+      "tag": "c:tridents"
+    }
+  ],
+  "weight": 60,
+  "style": {
+    "color": "blue"
+  },
+  "modifier_pool": "tiered:tridents/rare"
+}

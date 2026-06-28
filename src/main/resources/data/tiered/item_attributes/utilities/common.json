@@ -1,0 +1,22 @@
+﻿{
+    "id":  "tiered:utilities/common",
+    "verifiers":  [
+                      {
+                          "id":  "minecraft:flint_and_steel"
+                      },
+                      {
+                          "id":  "minecraft:brush"
+                      },
+                      {
+                          "id":  "minecraft:carrot_on_a_stick"
+                      },
+                      {
+                          "id":  "minecraft:warped_fungus_on_a_stick"
+                      }
+                  ],
+    "weight":  100,
+    "style":  {
+                  "color":  "gray"
+              },
+    "modifier_pool":  "tiered:utilities/common"
+}

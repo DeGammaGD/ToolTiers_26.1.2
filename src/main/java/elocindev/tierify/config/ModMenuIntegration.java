@@ -2,6 +2,7 @@ package elocindev.tierify.config;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
+import me.shedaniel.autoconfig.AutoConfigClient;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
@@ -10,7 +11,6 @@ public class ModMenuIntegration implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        // TODO(26.1): wire ModMenu config screen once Cloth AutoConfig exposes the new screen API.
-        return parent -> null;
+        return parent -> AutoConfigClient.getConfigScreen(ClientConfig.class, parent).get();
     }
 }

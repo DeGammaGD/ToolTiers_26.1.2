@@ -4,7 +4,7 @@
                            "type":  "tiered:generic.durability",
                            "modifier":  {
                                             "name":  "tiered:legendary_tool_1",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  0.3
                                         },
                            "optional_equipment_slots":  [
@@ -12,10 +12,10 @@
                                                         ]
                        },
                        {
-                           "type":  "minecraft:block_break_speed",
+                           "type":  "minecraft:mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:legendary_tool_2",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  0.2
                                         },
                            "optional_equipment_slots":  [
@@ -23,10 +23,10 @@
                                                         ]
                        },
                        {
-                           "type":  "minecraft:block_break_speed",
+                           "type":  "minecraft:mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:legendary_tool_3",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  0.2
                                         },
                            "optional_equipment_slots":  [
@@ -56,7 +56,7 @@
                                                         ]
                        },
                        {
-                           "type":  "minecraft:block_break_speed",
+                           "type":  "minecraft:mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:legendary_tool_4",
                                             "operation":  "ADD_MULTIPLIED_BASE",
@@ -101,3 +101,4 @@
                        }
                    ]
 }
+

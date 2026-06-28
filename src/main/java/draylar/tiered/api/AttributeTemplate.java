@@ -35,11 +35,15 @@ public class AttributeTemplate {
     @SerializedName("optional_equipment_slots")
     private final EquipmentSlot[] optionalEquipmentSlots;
 
+    @SerializedName("exclusive_group")
+    private final String exclusiveGroup;
+
     public AttributeTemplate(String attributeTypeID, AttributeModifier entityAttributeModifier, EquipmentSlot[] requiredEquipmentSlots, EquipmentSlot[] optionalEquipmentSlots) {
         this.attributeTypeID = attributeTypeID;
         this.entityAttributeModifier = entityAttributeModifier;
         this.requiredEquipmentSlots = requiredEquipmentSlots;
         this.optionalEquipmentSlots = optionalEquipmentSlots;
+        this.exclusiveGroup = null;
     }
 
     public EquipmentSlot[] getRequiredEquipmentSlots() {
@@ -56,6 +60,10 @@ public class AttributeTemplate {
 
     public String getAttributeTypeID() {
         return attributeTypeID;
+    }
+
+    public String getExclusiveGroup() {
+        return exclusiveGroup;
     }
 
     /**

@@ -23,17 +23,6 @@
                                                         ]
                        },
                        {
-                           "type":  "tiered:generic.critical_chance",
-                           "modifier":  {
-                                            "name":  "tiered:uncommon_ranged_weapons_critical_chance",
-                                            "operation":  "ADD_VALUE",
-                                            "amount":  0.12
-                                        },
-                           "optional_equipment_slots":  [
-                                                            "MAINHAND"
-                                                        ]
-                       },
-                       {
                            "type":  "tiered:generic.critical_damage",
                            "modifier":  {
                                             "name":  "tiered:uncommon_ranged_weapons_critical_damage",

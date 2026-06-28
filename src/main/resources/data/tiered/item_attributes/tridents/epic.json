@@ -1,0 +1,13 @@
+{
+  "id": "tiered:tridents/epic",
+  "verifiers": [
+    {
+      "tag": "c:tridents"
+    }
+  ],
+  "weight": 32,
+  "style": {
+    "color": "dark_purple"
+  },
+  "modifier_pool": "tiered:tridents/epic"
+}

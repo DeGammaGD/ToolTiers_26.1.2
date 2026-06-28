@@ -10,8 +10,6 @@ import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 @SuppressWarnings({"null"})
 public class CustomEntityAttributes {
 
-    public static final String HASTE_ID = "tiered:generic.haste";
-    public static final String LEGACY_DIG_SPEED_ID = "tiered:generic.dig_speed";
     public static final String CRITICAL_CHANCE_ID = "tiered:generic.critical_chance";
     public static final String LEGACY_CRIT_CHANCE_ID = "tiered:generic.crit_chance";
     public static final String DURABILITY_ID = "tiered:generic.durability";
@@ -25,9 +23,10 @@ public class CustomEntityAttributes {
     public static final String PROJECTILE_PROTECTION_ID = "tiered:generic.projectile_protection";
     public static final String POWER_ID = "tiered:generic.power";
     public static final String QUICK_DRAW_ID = "tiered:generic.quick_draw";
+    public static final String LUCKY_SHOT_ID = "tiered:generic.lucky_shot";
+    public static final String RIPTIDE_POWER_ID = "tiered:generic.riptide_power";
+    public static final String CHANNELING_CHANCE_ID = "tiered:generic.channeling_chance";
 
-    public static final Attribute HASTE = register("generic.haste", new RangedAttribute("generic.haste", 0.0D, 0.0D, 2048.0D).setSyncable(true));
-    public static final Attribute LEGACY_DIG_SPEED = register("generic.dig_speed", new RangedAttribute("generic.dig_speed", 0.0D, 0.0D, 2048.0D).setSyncable(true));
     public static final Attribute CRITICAL_CHANCE = register("generic.critical_chance", new RangedAttribute("generic.critical_chance", 0.0D, 0.0D, 1.0D).setSyncable(true));
     public static final Attribute LEGACY_CRIT_CHANCE = register("generic.crit_chance", new RangedAttribute("generic.crit_chance", 0.0D, 0.0D, 1.0D).setSyncable(true));
     public static final Attribute DURABILITY = register("generic.durability", new RangedAttribute("generic.durability", 0.0D, 0.0D, 1.0D).setSyncable(true));
@@ -57,10 +56,11 @@ public class CustomEntityAttributes {
     public static final Attribute CHARGE_DAMAGE = register("generic.charge_damage", new RangedAttribute("generic.charge_damage", 0.0D, 0.0D, 1024.0D).setSyncable(true));
     public static final Attribute POWER = register("generic.power", new RangedAttribute("generic.power", 0.0D, 0.0D, 1024.0D).setSyncable(true));
     public static final Attribute QUICK_DRAW = register("generic.quick_draw", new RangedAttribute("generic.quick_draw", 0.0D, 0.0D, 1024.0D).setSyncable(true));
+    public static final Attribute LUCKY_SHOT = register("generic.lucky_shot", new RangedAttribute("generic.lucky_shot", 0.0D, 0.0D, 1024.0D).setSyncable(true));
+    public static final Attribute RIPTIDE_POWER = register("generic.riptide_power", new RangedAttribute("generic.riptide_power", 0.0D, 0.0D, 1024.0D).setSyncable(true));
+    public static final Attribute CHANNELING_CHANCE = register("generic.channeling_chance", new RangedAttribute("generic.channeling_chance", 0.0D, 0.0D, 1.0D).setSyncable(true));
 
     public static final Attribute[] PLAYER_ATTRIBUTES = new Attribute[] {
-            HASTE,
-            LEGACY_DIG_SPEED,
             CRITICAL_CHANCE,
             LEGACY_CRIT_CHANCE,
             DURABILITY,
@@ -69,7 +69,6 @@ public class CustomEntityAttributes {
             LEGACY_RANGE_ATTACK_DAMAGE
     };
 
-    public static final Attribute[] HASTE_ATTRIBUTES = new Attribute[] { HASTE, LEGACY_DIG_SPEED };
     public static final Attribute[] CRITICAL_CHANCE_ATTRIBUTES = new Attribute[] { CRITICAL_CHANCE, LEGACY_CRIT_CHANCE };
     public static final Attribute[] DURABILITY_ATTRIBUTES = new Attribute[] { DURABILITY, LEGACY_DURABLE };
     public static final Attribute[] RANGED_ATTACK_DAMAGE_ATTRIBUTES = new Attribute[] { RANGED_ATTACK_DAMAGE, LEGACY_RANGE_ATTACK_DAMAGE };

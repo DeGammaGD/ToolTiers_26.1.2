@@ -1,10 +1,10 @@
 ﻿{
     "attributes":  [
                        {
-                           "type":  "minecraft:block_break_speed",
+                           "type":  "minecraft:mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:uncommon_tool_3",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  -0.1
                                         },
                            "optional_equipment_slots":  [
@@ -15,7 +15,7 @@
                            "type":  "tiered:generic.durability",
                            "modifier":  {
                                             "name":  "tiered:uncommon_tool_2",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "operation":  "ADD_VALUE",
                                             "amount":  -0.035
                                         },
                            "optional_equipment_slots":  [
@@ -23,7 +23,7 @@
                                                         ]
                        },
                        {
-                           "type":  "minecraft:block_break_speed",
+                           "type":  "minecraft:mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:uncommon_tool_4",
                                             "operation":  "ADD_MULTIPLIED_BASE",
@@ -79,3 +79,4 @@
                        }
                    ]
 }
+

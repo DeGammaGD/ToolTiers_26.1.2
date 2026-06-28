@@ -3,9 +3,9 @@
                        {
                            "type":  "tiered:generic.durability",
                            "modifier":  {
-                                            "name":  "tiered:epic_fishing_2",
+                                            "name":  "tiered:epic_fishing_durability",
                                             "operation":  "ADD_MULTIPLIED_BASE",
-                                            "amount":  0.3
+                                            "amount":  0.18
                                         },
                            "optional_equipment_slots":  [
                                                             "MAINHAND",
@@ -13,11 +13,11 @@
                                                         ]
                        },
                        {
-                           "type":  "generic.luck",
+                           "type":  "tiered:generic.mastery",
                            "modifier":  {
-                                            "name":  "tiered:epic_fishing_1",
-                                            "operation":  "ADDITION",
-                                            "amount":  1
+                                            "name":  "tiered:epic_fishing_mastery",
+                                            "operation":  "ADD_MULTIPLIED_BASE",
+                                            "amount":  0.14
                                         },
                            "optional_equipment_slots":  [
                                                             "MAINHAND",
@@ -26,5 +26,3 @@
                        }
                    ]
 }
-
-

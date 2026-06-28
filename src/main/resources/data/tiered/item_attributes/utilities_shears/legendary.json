@@ -1,0 +1,13 @@
+﻿{
+    "id":  "tiered:utilities_shears/legendary",
+    "verifiers":  [
+                      {
+                          "id":  "minecraft:shears"
+                      }
+                  ],
+    "weight":  6,
+    "style":  {
+                  "color":  "gold"
+              },
+    "modifier_pool":  "tiered:utilities_shears/legendary"
+}

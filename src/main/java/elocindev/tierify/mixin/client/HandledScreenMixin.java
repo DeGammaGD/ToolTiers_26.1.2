@@ -49,27 +49,23 @@ public abstract class HandledScreenMixin extends Screen {
         }
 
         ItemStack stack = this.hoveredSlot.getItem();
-        Tierify.LOGGER.info("[TooltipDebug] AbstractContainerScreen.extractTooltip start item={}", BuiltInRegistries.ITEM.getKey(stack.getItem()));
 
         CustomData component = stack.get(DataComponents.CUSTOM_DATA);
         CompoundTag root = component != null ? component.copyTag() : new CompoundTag();
         if (Tierify.CLIENT_CONFIG.tieredTooltip && component != null && root.contains(Tierify.NBT_SUBTAG_KEY)) {
             Optional<CompoundTag> tieredTag = root.getCompound(Tierify.NBT_SUBTAG_KEY);
             if (tieredTag.isEmpty()) {
-                Tierify.LOGGER.info("[TooltipDebug] No Tiered compound for {}", BuiltInRegistries.ITEM.getKey(stack.getItem()));
                 return;
             }
 
             String tierId = tieredTag.get().getString(Tierify.NBT_SUBTAG_DATA_KEY).orElse("");
             String nbtString = tieredTag.get().toString();
-            Tierify.LOGGER.info("[TooltipDebug] Detected tier id={} for item={}", tierId, BuiltInRegistries.ITEM.getKey(stack.getItem()));
 
             BorderTemplate matchedTemplate = null;
             for (int i = 0; i < TierifyClient.BORDER_TEMPLATES.size(); i++) {
                 BorderTemplate template = TierifyClient.BORDER_TEMPLATES.get(i);
                 if (template.containsDecider(tierId) || template.containsDecider(nbtString)) {
                     matchedTemplate = template;
-                    Tierify.LOGGER.info("[TooltipDebug] Matched template index={} texture={} identifier={}", template.getIndex(), template.getTexture(), template.getIdentifier());
                     break;
                 }
             }
@@ -82,11 +78,8 @@ public abstract class HandledScreenMixin extends Screen {
 
                 Font effectiveFont = this.font != null ? this.font : Minecraft.getInstance().font;
                 TieredTooltip.renderTieredTooltipFromComponents(context, effectiveFont, list, x, y, DefaultTooltipPositioner.INSTANCE, matchedTemplate);
-                Tierify.LOGGER.info("[TooltipDebug] Custom bordered tooltip rendered for item={}", BuiltInRegistries.ITEM.getKey(stack.getItem()));
 
                 info.cancel();
-            } else {
-                Tierify.LOGGER.info("[TooltipDebug] No matching border template for tier id={}", tierId);
             }
         }
     }

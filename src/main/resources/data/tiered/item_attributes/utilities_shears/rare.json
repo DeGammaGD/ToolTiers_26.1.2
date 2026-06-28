@@ -1,0 +1,13 @@
+﻿{
+    "id":  "tiered:utilities_shears/rare",
+    "verifiers":  [
+                      {
+                          "id":  "minecraft:shears"
+                      }
+                  ],
+    "weight":  30,
+    "style":  {
+                  "color":  "blue"
+              },
+    "modifier_pool":  "tiered:utilities_shears/rare"
+}

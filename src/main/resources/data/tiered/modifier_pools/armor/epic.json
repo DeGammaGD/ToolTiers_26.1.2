@@ -15,20 +15,6 @@
                                                         ]
                        },
                        {
-                           "type":  "minecraft:armor",
-                           "modifier":  {
-                                            "name":  "tiered:epic_armor_armor",
-                                            "operation":  "ADD_MULTIPLIED_BASE",
-                                            "amount":  0.2
-                                        },
-                           "optional_equipment_slots":  [
-                                                            "FEET",
-                                                            "LEGS",
-                                                            "CHEST",
-                                                            "HEAD"
-                                                        ]
-                       },
-                       {
                            "type":  "minecraft:armor_toughness",
                            "modifier":  {
                                             "name":  "tiered:epic_armor_armor_toughness",
@@ -48,20 +34,6 @@
                                             "name":  "tiered:epic_armor_protection_family",
                                             "operation":  "ADD_MULTIPLIED_BASE",
                                             "amount":  0.2
-                                        },
-                           "optional_equipment_slots":  [
-                                                            "FEET",
-                                                            "LEGS",
-                                                            "CHEST",
-                                                            "HEAD"
-                                                        ]
-                       },
-                       {
-                           "type":  "minecraft:armor_toughness",
-                           "modifier":  {
-                                            "name":  "tiered:epic_armor_toughness",
-                                            "operation":  "ADDITION",
-                                            "amount":  1
                                         },
                            "optional_equipment_slots":  [
                                                             "FEET",

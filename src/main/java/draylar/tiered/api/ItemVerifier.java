@@ -93,7 +93,8 @@ public class ItemVerifier {
             case "c:shears", "c:tools/shears", "minecraft:shears" -> "minecraft:shears".equals(itemID);
             case "c:flint_and_steel", "c:tools/flint_and_steel", "minecraft:flint_and_steel" -> "minecraft:flint_and_steel".equals(itemID);
             case "c:maces", "c:tools/maces", "minecraft:maces" -> "minecraft:mace".equals(itemID);
-            case "c:spears", "c:tools/spears", "minecraft:spears" -> "minecraft:trident".equals(itemID) || itemID.endsWith(":spear") || itemID.contains("_spear");
+            case "c:spears", "c:tools/spears", "minecraft:spears" -> itemID.endsWith(":spear") || itemID.contains("_spear");
+            case "c:tridents", "c:tools/tridents", "minecraft:tridents" -> "minecraft:trident".equals(itemID);
             default -> false;
         };
     }
@@ -151,6 +152,10 @@ public class ItemVerifier {
             case "spears", "tools/spears" -> {
                 addCandidate(candidates, "c:tools/spears");
                 addCandidate(candidates, "minecraft:spears");
+            }
+            case "tridents", "tools/tridents" -> {
+                addCandidate(candidates, "c:tools/tridents");
+                addCandidate(candidates, "minecraft:tridents");
             }
             case "maces", "tools/maces" -> {
                 addCandidate(candidates, "c:tools/maces");

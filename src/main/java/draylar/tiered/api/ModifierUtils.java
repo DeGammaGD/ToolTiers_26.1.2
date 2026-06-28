@@ -369,6 +369,7 @@ public class ModifierUtils {
         }
 
         Map<String, List<AttributeTemplate>> templatesByType = new LinkedHashMap<>();
+        Map<String, String> exclusiveGroupByType = new LinkedHashMap<>();
         for (AttributeTemplate template : assignedAttribute.getAttributes()) {
             if (template == null || template.getEntityAttributeModifier() == null || !isValidAttributeTypeId(template.getAttributeTypeID())) {
                 continue;
@@ -391,6 +392,11 @@ public class ModifierUtils {
             }
 
             templatesByType.computeIfAbsent(template.getAttributeTypeID(), k -> new ArrayList<>()).add(template);
+            if (!exclusiveGroupByType.containsKey(template.getAttributeTypeID())
+                    && template.getExclusiveGroup() != null
+                    && !template.getExclusiveGroup().isBlank()) {
+                exclusiveGroupByType.put(template.getAttributeTypeID(), template.getExclusiveGroup());
+            }
         }
 
         if (templatesByType.isEmpty()) {
@@ -408,9 +414,26 @@ public class ModifierUtils {
 
         List<String> types = new ArrayList<>(templatesByType.keySet());
         Collections.shuffle(types);
+        List<String> selectedTypes = new ArrayList<>();
+        List<String> selectedExclusiveGroups = new ArrayList<>();
 
-        for (int i = 0; i < targetCount; i++) {
-            String type = types.get(i);
+        for (String type : types) {
+            if (selectedTypes.size() >= targetCount) {
+                break;
+            }
+
+            String exclusiveGroup = exclusiveGroupByType.get(type);
+            if (exclusiveGroup != null && selectedExclusiveGroups.contains(exclusiveGroup)) {
+                continue;
+            }
+
+            selectedTypes.add(type);
+            if (exclusiveGroup != null) {
+                selectedExclusiveGroups.add(exclusiveGroup);
+            }
+        }
+
+        for (String type : selectedTypes) {
             List<AttributeTemplate> group = templatesByType.get(type);
             if (group == null || group.isEmpty()) {
                 continue;

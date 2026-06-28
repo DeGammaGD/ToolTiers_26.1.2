@@ -1,0 +1,13 @@
+{
+  "id": "tiered:tridents/legendary",
+  "verifiers": [
+    {
+      "tag": "c:tridents"
+    }
+  ],
+  "weight": 12,
+  "style": {
+    "color": "gold"
+  },
+  "modifier_pool": "tiered:tridents/legendary"
+}
