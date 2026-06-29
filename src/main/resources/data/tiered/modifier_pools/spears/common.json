@@ -1,7 +1,7 @@
 ﻿{
     "attributes":  [
                        {
-                           "type":  "tiered:generic.reach",
+                           "type":  "tiered:generic.spear_reach",
                            "modifier":  {
                                             "name":  "tiered:common_spears_reach",
                                             "operation":  "ADD_VALUE",

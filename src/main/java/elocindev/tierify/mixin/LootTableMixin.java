@@ -16,6 +16,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemInstance;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -58,6 +64,10 @@ public class LootTableMixin {
         }
 
         if (context.hasParameter(LootContextParams.BLOCK_STATE)) {
+            BlockState state = context.getOptionalParameter(LootContextParams.BLOCK_STATE);
+            if (state == null || !tierify$isFortuneEligibleBlock(state)) {
+                return 0.0D;
+            }
             return AttributeHelper.getItemAttributeAmount(tool, CustomEntityAttributes.FORTUNE);
         }
 
@@ -67,6 +77,24 @@ public class LootTableMixin {
         }
 
         return 0.0D;
+    }
+
+    private static boolean tierify$isFortuneEligibleBlock(BlockState state) {
+        Identifier blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        boolean isOreLike = blockId != null && blockId.getPath().endsWith("_ore");
+
+        if (isOreLike || state.is(BlockTags.LEAVES) || state.is(BlockTags.CROPS)) {
+            return true;
+        }
+
+        Block block = state.getBlock();
+        return block == Blocks.GLOWSTONE
+                || block == Blocks.GRAVEL
+                || block == Blocks.MELON
+                || block == Blocks.NETHER_WART
+                || block == Blocks.SWEET_BERRY_BUSH
+                || block == Blocks.SEA_LANTERN
+                || block == Blocks.GILDED_BLACKSTONE;
     }
 
     /**

@@ -40,6 +40,7 @@ public class ModifierUtils {
     private static final String GENERATED_COUNT_KEY = "count";
     private static final String ENTRY_PREFIX = "entry_";
     private static final String MOVEMENT_SPEED_ATTRIBUTE_ID = "minecraft:movement_speed";
+    private static final String MINING_EFFICIENCY_ATTRIBUTE_ID = CustomEntityAttributes.MINING_EFFICIENCY_ID;
 
     private static final class GeneratedAttributeRoll {
         private final String attributeTypeId;
@@ -1094,6 +1095,7 @@ public class ModifierUtils {
                 .getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
 
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
+        Map<EquipmentSlotGroup, Double> miningEfficiencyTotals = new HashMap<>();
 
         Equippable equippable = itemStack.get(DataComponents.EQUIPPABLE);
         EquipmentSlot armorSlot = null;
@@ -1110,6 +1112,13 @@ public class ModifierUtils {
             if (armorSlot != null && (slotGroup == EquipmentSlotGroup.ARMOR || slotGroup == EquipmentSlotGroup.BODY)) {
                 slotGroup = EquipmentSlotGroup.bySlot(armorSlot);
             }
+
+            Identifier attributeId = BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value());
+            if (attributeId != null && MINING_EFFICIENCY_ATTRIBUTE_ID.equals(attributeId.toString())) {
+                miningEfficiencyTotals.merge(slotGroup, entry.modifier().amount(), Double::sum);
+                continue;
+            }
+
             builder.add(entry.attribute(), entry.modifier(), slotGroup);
         }
 
@@ -1119,8 +1128,38 @@ public class ModifierUtils {
                 continue;
             }
             Multimap<Holder<Attribute>, AttributeModifier> generated = buildTierAttributeMap(itemStack, slot);
+            double miningEfficiencyTotal = 0.0D;
             for (java.util.Map.Entry<Holder<Attribute>, AttributeModifier> entry : generated.entries()) {
+                Identifier attributeId = BuiltInRegistries.ATTRIBUTE.getKey(entry.getKey().value());
+                if (attributeId != null && MINING_EFFICIENCY_ATTRIBUTE_ID.equals(attributeId.toString())) {
+                    miningEfficiencyTotal += entry.getValue().amount();
+                    continue;
+                }
                 builder.add(entry.getKey(), entry.getValue(), EquipmentSlotGroup.bySlot(slot));
+                appliedModifierCount++;
+            }
+
+            if (miningEfficiencyTotal != 0.0D) {
+                EquipmentSlotGroup slotGroup = EquipmentSlotGroup.bySlot(slot);
+                miningEfficiencyTotals.merge(slotGroup, miningEfficiencyTotal, Double::sum);
+            }
+        }
+
+        Holder<Attribute> miningEfficiency = BuiltInRegistries.ATTRIBUTE.get(Identifier.parse(MINING_EFFICIENCY_ATTRIBUTE_ID)).orElse(null);
+        if (miningEfficiency != null) {
+            for (Map.Entry<EquipmentSlotGroup, Double> entry : miningEfficiencyTotals.entrySet()) {
+                double total = entry.getValue();
+                if (total == 0.0D) {
+                    continue;
+                }
+
+                builder.add(
+                        miningEfficiency,
+                        new AttributeModifier(
+                                Tierify.id("mining_efficiency_" + entry.getKey().getSerializedName().toLowerCase(Locale.ROOT)),
+                                total,
+                                AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        entry.getKey());
                 appliedModifierCount++;
             }
         }

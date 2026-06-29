@@ -5,9 +5,12 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 
+import draylar.tiered.api.CustomEntityAttributes;
 import elocindev.tierify.util.AttributeHelper;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.AttackRange;
 
 /**
  * Applies the ToolTiers protection attributes ({@code protection}, {@code fire_protection}, {@code blast_protection},
@@ -19,6 +22,24 @@ import net.minecraft.world.entity.LivingEntity;
  */
 @Mixin(LivingEntity.class)
 public class LivingEntityProtectionMixin {
+
+    @ModifyReturnValue(method = "getAttackRangeWith(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/component/AttackRange;", at = @At("RETURN"))
+    private AttackRange tierify$applySpearReach(AttackRange originalRange, ItemStack weapon) {
+        double spearReach = AttributeHelper.getItemAttributeAmount(weapon, CustomEntityAttributes.SPEAR_REACH);
+        if (spearReach == 0.0D) {
+            return originalRange;
+        }
+
+        float maxReach = (float) Math.max(0.0D, originalRange.maxReach() + spearReach);
+        float maxCreativeReach = (float) Math.max(0.0D, originalRange.maxCreativeReach() + spearReach);
+        return new AttackRange(
+                originalRange.minReach(),
+                maxReach,
+                originalRange.minCreativeReach(),
+                maxCreativeReach,
+                originalRange.hitboxMargin(),
+                originalRange.mobFactor());
+    }
 
     @ModifyReturnValue(method = "getDamageAfterMagicAbsorb(Lnet/minecraft/world/damagesource/DamageSource;F)F", at = @At("RETURN"))
     private float tierify$tieredProtection(float damageAfterVanilla, DamageSource source, float damageBeforeMagic) {

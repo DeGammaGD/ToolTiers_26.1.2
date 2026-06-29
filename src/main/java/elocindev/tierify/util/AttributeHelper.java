@@ -4,6 +4,7 @@ import draylar.tiered.api.CustomEntityAttributes;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -27,13 +28,46 @@ public class AttributeHelper {
         if (component == null) {
             return 0.0D;
         }
+        Identifier targetId = BuiltInRegistries.ATTRIBUTE.getKey(attribute);
         double sum = 0.0D;
         for (ItemAttributeModifiers.Entry entry : component.modifiers()) {
-            if (entry.attribute().value() == attribute) {
+            Attribute entryAttribute = entry.attribute().value();
+            if (entryAttribute == attribute) {
+                sum += entry.modifier().amount();
+                continue;
+            }
+
+            Identifier entryId = BuiltInRegistries.ATTRIBUTE.getKey(entryAttribute);
+            if (targetId != null && targetId.equals(entryId)) {
                 sum += entry.modifier().amount();
             }
         }
         return sum;
+    }
+
+    /**
+     * Applies the item-stack mining efficiency modifiers from the current main-hand tool to the vanilla
+     * break speed value. Add-value and multiplied operations are both treated as proportional speed factors
+     * to keep tier semantics consistent with percentage-style tooltip display.
+     */
+    public static float applyMiningEfficiencyModifier(Player playerEntity, float vanillaSpeed) {
+        if (playerEntity == null) {
+            return vanillaSpeed;
+        }
+
+        ItemStack mainhand = playerEntity.getMainHandItem();
+        if (mainhand == null || mainhand.isEmpty()) {
+            return vanillaSpeed;
+        }
+
+        double miningEfficiencyTotal = getItemAttributeAmount(mainhand, CustomEntityAttributes.MINING_EFFICIENCY);
+
+        if (miningEfficiencyTotal == 0.0D) {
+            return vanillaSpeed;
+        }
+
+        float adjustedSpeed = (float) (vanillaSpeed * (1.0D + miningEfficiencyTotal));
+        return Math.max(0.0F, adjustedSpeed);
     }
 
     /**

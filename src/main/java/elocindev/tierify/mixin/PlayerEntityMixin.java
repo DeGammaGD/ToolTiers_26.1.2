@@ -6,7 +6,9 @@ import elocindev.tierify.Tierify;
 import elocindev.tierify.util.AttributeHelper;
 import elocindev.tierify.util.CombatContextHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -14,14 +16,15 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -29,6 +32,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class PlayerEntityMixin {
 
     private static final Identifier TIERIFY_GLIDE_SPEED_ID = Tierify.id("glide_speed");
+    private static final Identifier TIERIFY_REACH_ID = Tierify.id("reach");
+    private static final TagKey<Item> C_SPEARS_TAG = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "spears"));
+    private static final TagKey<Item> C_TOOLS_SPEARS_TAG = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "tools/spears"));
 
     /**
      * Registers all ToolTiers custom attributes onto the player's attribute map.
@@ -57,24 +63,56 @@ public class PlayerEntityMixin {
     private void tierify$syncGlideSpeed(CallbackInfo ci) {
         Player self = (Player) (Object) this;
         AttributeInstance instance = self.getAttribute(Attributes.FLYING_SPEED);
-        if (instance == null) {
-            return;
-        }
+        if (instance != null) {
+            double glideSpeed = AttributeHelper.getItemAttributeAmount(self.getItemBySlot(EquipmentSlot.CHEST),
+                    CustomEntityAttributes.GLIDE_SPEED);
+            boolean shouldApply = glideSpeed > 0.0D && self.isFallFlying();
 
-        double glideSpeed = AttributeHelper.getItemAttributeAmount(self.getItemBySlot(EquipmentSlot.CHEST),
-                CustomEntityAttributes.GLIDE_SPEED);
-        boolean shouldApply = glideSpeed > 0.0D && self.isFallFlying();
-
-        AttributeModifier existing = instance.getModifier(TIERIFY_GLIDE_SPEED_ID);
-        if (shouldApply) {
-            if (existing == null || existing.amount() != glideSpeed) {
+            AttributeModifier existing = instance.getModifier(TIERIFY_GLIDE_SPEED_ID);
+            if (shouldApply) {
+                if (existing == null || existing.amount() != glideSpeed) {
+                    instance.removeModifier(TIERIFY_GLIDE_SPEED_ID);
+                    instance.addTransientModifier(new AttributeModifier(TIERIFY_GLIDE_SPEED_ID, glideSpeed,
+                            AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+                }
+            } else if (existing != null) {
                 instance.removeModifier(TIERIFY_GLIDE_SPEED_ID);
-                instance.addTransientModifier(new AttributeModifier(TIERIFY_GLIDE_SPEED_ID, glideSpeed,
-                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
             }
-        } else if (existing != null) {
-            instance.removeModifier(TIERIFY_GLIDE_SPEED_ID);
         }
+
+        AttributeInstance reachInstance = self.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+        if (reachInstance != null) {
+            ItemStack mainhand = self.getItemBySlot(EquipmentSlot.MAINHAND);
+            double reach = AttributeHelper.getItemAttributeAmount(mainhand, CustomEntityAttributes.REACH);
+            if (self.level().isClientSide() && tierify$isSpearItem(mainhand)) {
+                reach += AttributeHelper.getItemAttributeAmount(mainhand, CustomEntityAttributes.SPEAR_REACH);
+            }
+            boolean shouldApplyReach = reach != 0.0D;
+
+            AttributeModifier existingReach = reachInstance.getModifier(TIERIFY_REACH_ID);
+            if (shouldApplyReach) {
+                if (existingReach == null || existingReach.amount() != reach) {
+                    reachInstance.removeModifier(TIERIFY_REACH_ID);
+                    reachInstance.addTransientModifier(new AttributeModifier(TIERIFY_REACH_ID, reach,
+                            AttributeModifier.Operation.ADD_VALUE));
+                }
+            } else if (existingReach != null) {
+                reachInstance.removeModifier(TIERIFY_REACH_ID);
+            }
+        }
+    }
+
+    @Inject(
+            method = {
+                    "getDestroySpeed(Lnet/minecraft/world/level/block/state/BlockState;)F",
+                    "getBlockBreakingSpeed(Lnet/minecraft/world/level/block/state/BlockState;)F"
+            },
+            at = @At("RETURN"),
+            cancellable = true,
+            require = 1)
+    private void tierify$applyMiningEfficiency(BlockState state, CallbackInfoReturnable<Float> cir) {
+        Player self = (Player) (Object) this;
+        cir.setReturnValue(AttributeHelper.applyMiningEfficiencyModifier(self, cir.getReturnValue()));
     }
 
     @Inject(method = "attack(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"))
@@ -116,33 +154,6 @@ public class PlayerEntityMixin {
         return tierify$getScaledSweepRange(vanillaSweepRange);
     }
 
-    @ModifyVariable(
-            method = "stabAttack(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/entity/Entity;FZZZ)Z",
-            at = @At("HEAD"),
-            ordinal = 0,
-            argsOnly = true)
-    private float tierify$modifyChargedSpearBaseDamage(float baseDamage,
-                                                       EquipmentSlot slot,
-                                                       Entity target,
-                                                       float enchantmentDamage,
-                                                       boolean vanillaCriticalAttack,
-                                                       boolean sweepingAttack,
-                                                       boolean sprintKnockbackAttack) {
-        Player self = (Player) (Object) this;
-        ItemStack weapon = self.getItemBySlot(slot);
-        if (!tierify$isSpearItem(weapon)) {
-            return baseDamage;
-        }
-
-        double chargeDamage = AttributeHelper.getItemAttributeAmount(weapon, CustomEntityAttributes.CHARGE_DAMAGE);
-        double factor = Math.max(0.0D, 1.0D + chargeDamage);
-        float damage = baseDamage * (float) factor;
-
-        // Keep vanilla critical/sweep/sprint branching intact by not overriding the vanilla crit flag.
-        // Spears use stabAttack where vanilla crit behavior differs, so apply tiered crit chance directly to damage.
-        return damage;
-    }
-
     private double tierify$getScaledSweepRange(double vanillaSweepRange) {
         Player self = (Player) (Object) this;
         ItemStack weapon = self.getWeaponItem();
@@ -157,6 +168,6 @@ public class PlayerEntityMixin {
         }
 
         String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-        return "minecraft:trident".equals(itemId) || itemId.endsWith(":spear") || itemId.contains("_spear");
+        return "minecraft:trident".equals(itemId) || stack.is(C_SPEARS_TAG) || stack.is(C_TOOLS_SPEARS_TAG);
     }
 }

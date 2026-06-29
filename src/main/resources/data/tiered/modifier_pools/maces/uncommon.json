@@ -1,6 +1,17 @@
 ﻿{
     "attributes":  [
                        {
+                           "type":  "tiered:generic.reach",
+                           "modifier":  {
+                                            "name":  "tiered:uncommon_maces_reach",
+                                            "operation":  "ADD_VALUE",
+                                            "amount":  -0.5
+                                        },
+                           "optional_equipment_slots":  [
+                                                            "MAINHAND"
+                                                        ]
+                       },
+                       {
                            "type":  "tiered:generic.density",
                            "modifier":  {
                                             "name":  "tiered:uncommon_maces_density",

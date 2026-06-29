@@ -37,7 +37,7 @@
                                                         ]
                        },
                        {
-                           "type":  "minecraft:mining_efficiency",
+                           "type":  "tiered:generic.mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:legendary_utilities_shears_block_break_speed",
                                             "operation":  "ADD_MULTIPLIED_BASE",

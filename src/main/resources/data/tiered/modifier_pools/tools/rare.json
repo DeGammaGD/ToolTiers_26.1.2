@@ -1,7 +1,7 @@
 ﻿{
     "attributes":  [
                        {
-                           "type":  "minecraft:mining_efficiency",
+                           "type":  "tiered:generic.mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:rare_tool_3",
                                             "operation":  "ADD_VALUE",
@@ -12,7 +12,7 @@
                                                         ]
                        },
                        {
-                           "type":  "minecraft:mining_efficiency",
+                           "type":  "tiered:generic.mining_efficiency",
                            "modifier":  {
                                             "name":  "tiered:rare_tool_4",
                                             "operation":  "ADD_VALUE",

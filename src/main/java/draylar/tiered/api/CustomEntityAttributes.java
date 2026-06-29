@@ -24,8 +24,10 @@ public class CustomEntityAttributes {
     public static final String POWER_ID = "tiered:generic.power";
     public static final String QUICK_DRAW_ID = "tiered:generic.quick_draw";
     public static final String LUCKY_SHOT_ID = "tiered:generic.lucky_shot";
+    public static final String MINING_EFFICIENCY_ID = "tiered:generic.mining_efficiency";
     public static final String RIPTIDE_POWER_ID = "tiered:generic.riptide_power";
     public static final String CHANNELING_CHANCE_ID = "tiered:generic.channeling_chance";
+    public static final String SPEAR_REACH_ID = "tiered:generic.spear_reach";
 
     public static final Attribute CRITICAL_CHANCE = register("generic.critical_chance", new RangedAttribute("generic.critical_chance", 0.0D, 0.0D, 1.0D).setSyncable(true));
     public static final Attribute LEGACY_CRIT_CHANCE = register("generic.crit_chance", new RangedAttribute("generic.crit_chance", 0.0D, 0.0D, 1.0D).setSyncable(true));
@@ -40,7 +42,9 @@ public class CustomEntityAttributes {
     public static final Attribute PROJECTILE_PROTECTION = register("generic.projectile_protection", new RangedAttribute("generic.projectile_protection", 0.0D, 0.0D, 1024.0D).setSyncable(true));
 
     public static final Attribute FORTUNE = register("generic.fortune", new RangedAttribute("generic.fortune", 0.0D, 0.0D, 1024.0D).setSyncable(true));
+    public static final Attribute MINING_EFFICIENCY = register("generic.mining_efficiency", new RangedAttribute("generic.mining_efficiency", 0.0D, -1024.0D, 1024.0D).setSyncable(true));
     public static final Attribute REACH = register("generic.reach", new RangedAttribute("generic.reach", 0.0D, 0.0D, 1024.0D).setSyncable(true));
+    public static final Attribute SPEAR_REACH = register("generic.spear_reach", new RangedAttribute("generic.spear_reach", 0.0D, -1024.0D, 1024.0D).setSyncable(true));
     public static final Attribute MASTERY = register("generic.mastery", new RangedAttribute("generic.mastery", 0.0D, 0.0D, 1024.0D).setSyncable(true));
     public static final Attribute CRITICAL_DAMAGE = register("generic.critical_damage", new RangedAttribute("generic.critical_damage", 0.0D, 0.0D, 1024.0D).setSyncable(true));
     public static final Attribute LOOTING = register("generic.looting", new RangedAttribute("generic.looting", 0.0D, 0.0D, 1024.0D).setSyncable(true));

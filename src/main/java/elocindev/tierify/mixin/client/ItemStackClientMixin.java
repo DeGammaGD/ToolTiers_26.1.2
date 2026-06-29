@@ -6,6 +6,7 @@ import java.math.RoundingMode;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import draylar.tiered.api.CustomEntityAttributes;
 import draylar.tiered.api.PotentialAttribute;
 import elocindev.tierify.Tierify;
 import elocindev.tierify.util.TieredTooltip;
@@ -63,6 +64,97 @@ public abstract class ItemStackClientMixin {
 
         String formatted = raw.substring(0, matcher.start(1)) + replacement + raw.substring(matcher.end(1));
         return Component.literal(formatted).setStyle(component.getStyle());
+    }
+
+    private static Component formatMiningEfficiencyComponent(Component component) {
+        String miningName = Component.translatable("generic.mining_efficiency").getString();
+        if (miningName.isEmpty()) {
+            miningName = Component.translatable("attribute.name.minecraft.mining_efficiency").getString();
+        }
+        String raw = component.getString();
+        if (miningName.isEmpty() || !raw.contains(miningName) || raw.indexOf('%') >= 0) {
+            return component;
+        }
+
+        Matcher matcher = PLAIN_NUMBER_PATTERN.matcher(raw);
+        if (!matcher.find()) {
+            return component;
+        }
+
+        String replacement;
+        try {
+            double value = Double.parseDouble(matcher.group(1)) * 100.0;
+            BigDecimal rounded = new BigDecimal(value).setScale(1, RoundingMode.HALF_UP).stripTrailingZeros();
+            replacement = rounded.toPlainString() + "%";
+        } catch (NumberFormatException ignored) {
+            return component;
+        }
+
+        String formatted = raw.substring(0, matcher.start(1)) + replacement + raw.substring(matcher.end(1));
+        return Component.literal(formatted).setStyle(component.getStyle());
+    }
+
+    private static boolean isMiningEfficiencyLine(Component component) {
+        String raw = component.getString();
+        String lower = raw.toLowerCase();
+        String customMiningName = Component.translatable("generic.mining_efficiency").getString();
+        if (!customMiningName.isEmpty() && raw.contains(customMiningName)) {
+            return true;
+        }
+
+        String miningName = Component.translatable("attribute.name.minecraft.mining_efficiency").getString();
+        if (!miningName.isEmpty() && raw.contains(miningName)) {
+            return true;
+        }
+
+        // Some vanilla/enchantment contexts render a separate total mining-speed line.
+        // Collapse it with mining-efficiency so only one user-facing line remains.
+        String[] miningSpeedKeys = new String[] {
+                "attribute.name.minecraft.block_break_speed",
+                "attribute.name.player.block_break_speed",
+                "attribute.name.generic.block_break_speed",
+                "attribute.name.minecraft.mining_speed",
+                "attribute.name.player.mining_speed",
+                "attribute.name.generic.mining_speed"
+        };
+
+        for (String key : miningSpeedKeys) {
+            String value = Component.translatable(key).getString();
+            if (!value.isEmpty() && raw.contains(value)) {
+                return true;
+            }
+        }
+
+        if (lower.contains("mining speed") || lower.contains("block break speed") || lower.contains("block breaking speed")) {
+            return true;
+        }
+
+        return lower.contains("mining") && lower.contains("speed");
+    }
+
+    private static boolean hasPercentValue(Component component) {
+        return component.getString().indexOf('%') >= 0;
+    }
+
+    private static boolean hasCustomMiningEfficiencyAttribute(ItemStack stack) {
+        var component = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
+        if (component == null) {
+            return false;
+        }
+
+        for (var entry : component.modifiers()) {
+            Identifier attributeId = BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value());
+            if (attributeId != null && CustomEntityAttributes.MINING_EFFICIENCY_ID.equals(attributeId.toString())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isEfficiencyEnchantmentLine(Component component) {
+        String efficiencyName = Component.translatable("enchantment.minecraft.efficiency").getString();
+        return !efficiencyName.isEmpty() && component.getString().contains(efficiencyName);
     }
 
     private static String formatPercentNumbers(String text) {
@@ -134,9 +226,53 @@ public abstract class ItemStackClientMixin {
     @Inject(method = "getTooltipLines", at = @At("RETURN"), cancellable = true, require = 0)
     private void getTooltipMixin(Item.TooltipContext context, Player player, TooltipFlag type, CallbackInfoReturnable<List<Component>> info) {
         List<Component> tooltip = info.getReturnValue();
+        ItemStack self = (ItemStack) (Object) this;
+        boolean hasCustomMining = hasCustomMiningEfficiencyAttribute(self);
         for (int i = 0; i < tooltip.size(); i++) {
             Component line = formatCriticalChanceComponent(tooltip.get(i));
-            tooltip.set(i, formatTooltipComponent(line));
+            line = formatMiningEfficiencyComponent(line);
+            line = formatTooltipComponent(line);
+            tooltip.set(i, line);
+        }
+
+        int keepMiningLineIndex = -1;
+        for (int i = 0; i < tooltip.size(); i++) {
+            Component line = tooltip.get(i);
+            if (!isMiningEfficiencyLine(line)) {
+                continue;
+            }
+
+            if (keepMiningLineIndex == -1) {
+                keepMiningLineIndex = i;
+                continue;
+            }
+
+            // Prefer the explicit percent-based line when both vanilla total speed and tier line exist.
+            if (hasPercentValue(line) && !hasPercentValue(tooltip.get(keepMiningLineIndex))) {
+                keepMiningLineIndex = i;
+            }
+        }
+
+        if (keepMiningLineIndex != -1) {
+            for (int i = tooltip.size() - 1; i >= 0; i--) {
+                if (i == keepMiningLineIndex) {
+                    continue;
+                }
+                if (isMiningEfficiencyLine(tooltip.get(i))) {
+                    tooltip.remove(i);
+                }
+            }
+        }
+
+        if (hasCustomMining) {
+            for (int i = tooltip.size() - 1; i >= 0; i--) {
+                if (keepMiningLineIndex != -1 && i == keepMiningLineIndex) {
+                    continue;
+                }
+                if (isEfficiencyEnchantmentLine(tooltip.get(i))) {
+                    tooltip.remove(i);
+                }
+            }
         }
 
         CustomData component = ((ItemStack) (Object) this).get(DataComponents.CUSTOM_DATA);
